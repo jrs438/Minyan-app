@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CBT Minyan — UI Mockups v0.2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    input[type="range"] { -webkit-appearance: none; appearance: none; background: transparent; }
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 4px; background: rgba(15,30,46,0.15); border-radius: 2px;
+    }
+    input[type="range"]::-moz-range-track {
+      height: 4px; background: rgba(15,30,46,0.15); border-radius: 2px;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: #8f6d3c; margin-top: -7px; cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 18px; height: 18px; border-radius: 50%;
+      background: #8f6d3c; cursor: pointer; border: 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    input[type="checkbox"] { accent-color: #8f6d3c; }
+  </style>
+  <!-- React + Babel via CDN so the file runs standalone -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel" data-presets="react">
+const { useState, useMemo } = React;
+
+function MinyanMockupsV2() {
+  return (
+    <div style={styles.page}>
+      <PageHeader />
+      <div style={styles.grid}>
+        <Screen label="01 · Member" title="Home" sub="Sponsored minyan callout, merged mincha/maariv">
+          <MemberHome />
+        </Screen>
+        <Screen label="02 · Teen" title="Home" sub="Streak-forward, big prize visible">
+          <TeenHome />
+        </Screen>
+        <Screen label="03 · Flow" title="Declining with nudge" sub="Informed consent, not a block">
+          <DeclineFlow />
+        </Screen>
+        <Screen label="04 · Member / Teen" title="Leaderboard" sub="Teens compete · adults are honored">
+          <Leaderboard />
+        </Screen>
+        <Screen label="05 · Member" title="Rides" sub="Visibility, not matching">
+          <Rides />
+        </Screen>
+        <Screen label="06 · Member" title="Sponsor a Minyan" sub="Dedicate to a specific date">
+          <Sponsor />
+        </Screen>
+        <Screen label="07 · Yahrzeit prompt" title="Family prompt" sub="The sponsorship flywheel, in one tap">
+          <YahrzeitPrompt />
+        </Screen>
+        <Screen label="08 · Gabbai" title="Dashboard" sub="Quiet by default, loud when needed">
+          <GabbaiDash />
+        </Screen>
+        <Screen label="09 · Teen" title="Profile" sub="Identity, stats, notifications">
+          <Profile />
+        </Screen>
+        <Screen label="10 · Admin" title="Economy" sub="Budget your runway in real time" wide>
+          <EconomyCalculator />
+        </Screen>
+      </div>
+      <div style={styles.ornament}>✡ · ✡ · ✡</div>
+      <div style={styles.footerNote}>
+        Mockups v0.2 — for discussion with the rav, board & gabbai before Glide build. <br/>
+        Revisions: merged mincha/maariv · adult recognition replaces adult rewards · front-loaded teen prizes · sponsored/yahrzeit minyanim · interactive economy calculator.
+      </div>
+    </div>
+  );
+}
+
+/* ===== Shared UI ===== */
+
+function PageHeader() {
+  return (
+    <div style={styles.header}>
+      <div style={styles.eyebrow}>Congregation Beth Tefillah · Paramus · v0.2</div>
+      <h1 style={styles.h1}>Minyan <em style={styles.h1em}>— a companion for the daily ten</em></h1>
+      <p style={styles.headerP}>Ten screens across three roles, including a working economy calculator. Drag the sliders on screen 10 to budget your runway.</p>
+      <div style={styles.legend}>
+        <div style={styles.legendItem}><span style={{...styles.dot, background:'#d9c194'}}/>Member</div>
+        <div style={styles.legendItem}><span style={{...styles.dot, background:'#d67050'}}/>Teen</div>
+        <div style={styles.legendItem}><span style={{...styles.dot, background:'#6b9b8a'}}/>Gabbai / Admin</div>
+      </div>
+    </div>
+  );
+}
+
+function Screen({ label, title, sub, children, wide }) {
+  return (
+    <div style={styles.screenWrap}>
+      <div style={styles.screenLabel}>{label}</div>
+      <div style={styles.screenTitle}>{title}</div>
+      <div style={styles.screenSub}>{sub}</div>
+      <div style={wide ? styles.iphoneWide : styles.iphone}>
+        {!wide && <div style={styles.notch}/>}
+        <div style={wide ? styles.screenSurfaceWide : styles.screenSurface}>
+          {!wide && <StatusBar/>}
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatusBar({ time = '9:41' }) {
+  return (
+    <div style={styles.statusBar}>
+      <span>{time}</span>
+      <div style={styles.statusRight}>
+        <span style={{opacity:0.7}}>●●●</span>
+        <span>􀛨</span>
+        <span>􀛩</span>
+      </div>
+    </div>
+  );
+}
+
+function AppHeader({ left, leftEm, right, crumb }) {
+  return (
+    <div style={styles.appHeader}>
+      {crumb ? (
+        <div style={{fontSize:11, color:'#8a8578'}}>{crumb}</div>
+      ) : (
+        <div style={styles.shulMark}>
+          {left}
+          {leftEm && <em style={styles.shulMarkEm}>{leftEm}</em>}
+        </div>
+      )}
+      {right && <div style={styles.headerIcon}>{right}</div>}
+    </div>
+  );
+}
+
+/* ===== 01. Member Home ===== */
+
+function MemberHome() {
+  return (
+    <div style={styles.appBody}>
+      <AppHeader left="Beth Tefillah" leftEm="Wed Eve · יום רביעי" right="JL"/>
+
+      <div style={styles.sectionLabel}>Thursday &amp; Tonight</div>
+
+      {/* Sponsored minyan highlight */}
+      <div style={styles.sponsoredCard}>
+        <div style={styles.sponsoredRibbon}>✡ DEDICATED MINYAN</div>
+        <div style={styles.sponsoredTitle}>Thursday Shacharit · 6:35 AM</div>
+        <div style={styles.sponsoredDedi}>In memory of Moshe ben Avraham, z"l — yahrzeit</div>
+        <div style={styles.sponsoredFooter}>
+          <span>Sponsored by the Cohen family</span>
+          <span style={styles.sponsoredCount}>8 / 10</span>
+        </div>
+      </div>
+
+      <div style={styles.minyanLine}>
+        <div>
+          <div style={styles.minyanTitle}>Mincha/Maariv</div>
+          <div style={styles.minyanTime}>Tonight · 4:15 PM</div>
+        </div>
+        <div style={{...styles.pill, ...styles.pillOk}}>11 ✓</div>
+      </div>
+      <div style={styles.minyanLine}>
+        <div>
+          <div style={styles.minyanTitle}>Fri Shacharit</div>
+          <div style={styles.minyanTime}>Fri · 6:33 AM</div>
+        </div>
+        <div style={{...styles.pill, ...styles.pillWarn}}>9 ⚠</div>
+      </div>
+
+      <div style={styles.commitCard}>
+        <div style={styles.commitGlow}/>
+        <div style={styles.commitTitle}>Thursday Shacharit</div>
+        <div style={styles.commitSub}>The Cohen yahrzeit needs a full minyan.</div>
+        <div style={styles.commitBtns}>
+          <div style={{...styles.commitBtn, ...styles.commitBtnPrimary}}>I'm coming</div>
+          <div style={styles.commitBtn}>Can't make it</div>
+          <div style={styles.commitBtn}>Maybe</div>
+        </div>
+      </div>
+
+      <div style={styles.poolCard}>
+        <div>
+          <div style={styles.poolLabel}>Incentive Pool</div>
+          <div style={styles.poolAmount}>$3,240</div>
+        </div>
+        <div style={styles.poolCta}>Sponsor ›</div>
+      </div>
+
+      <div style={styles.tiles}>
+        <Tile icon="🏆" label="Leaderboard"/>
+        <Tile icon="🚗" label="Rides"/>
+        <Tile icon="✓" label="Check-In"/>
+      </div>
+    </div>
+  );
+}
+
+function Tile({ icon, label }) {
+  return (
+    <div style={styles.tile}>
+      <div style={styles.tileIcon}>{icon}</div>
+      <div style={styles.tileLabel}>{label}</div>
+    </div>
+  );
+}
+
+/* ===== 02. Teen Home ===== */
+
+function TeenHome() {
+  return (
+    <div style={styles.appBody}>
+      <AppHeader left="Beth Tefillah" leftEm="Wed Eve · יום רביעי" right="EW"/>
+
+      <div style={styles.statsStrip}>
+        <div style={styles.statsGlow}/>
+        <div style={styles.statsName}>Shalom, <em>Eli</em></div>
+        <div style={styles.statsRow}>
+          <div style={styles.stat}>
+            <div style={styles.statValue}>🔥 7</div>
+            <div style={styles.statLabel}>Day Streak</div>
+          </div>
+          <div style={styles.stat}>
+            <div style={styles.statValue}>142</div>
+            <div style={styles.statLabel}>Points · Mar</div>
+          </div>
+          <div style={styles.stat}>
+            <div style={styles.statValue}>#3</div>
+            <div style={styles.statLabel}>Of 18</div>
+          </div>
+        </div>
+      </div>
+
+      <div style={styles.prizeBanner}>
+        <strong style={styles.prizeBannerStrong}>🏆 MARCH · $200 FOR #1</strong>
+        12 days left · $75 for #2 · $50 for #3
+      </div>
+
+      <div style={styles.commitCard}>
+        <div style={styles.commitGlow}/>
+        <div style={styles.commitTitle}>Thursday Shacharit · 6:35 ✡</div>
+        <div style={styles.commitSub}>Cohen yahrzeit · +14 pts (bonus minyan)</div>
+        <div style={styles.commitBtns}>
+          <div style={{...styles.commitBtn, ...styles.commitBtnPrimary}}>I'm coming</div>
+          <div style={styles.commitBtn}>Can't</div>
+          <div style={styles.commitBtn}>Maybe</div>
+        </div>
+      </div>
+
+      <div style={styles.climbCard}>
+        <div style={styles.climbTitle}>Climb the board</div>
+        <div style={styles.climbRow}><span><span style={styles.climbRank}>#1</span>  Shlomo K.</span><span>158 <span style={styles.climbGap}>(+16)</span></span></div>
+        <div style={styles.climbRow}><span><span style={styles.climbRank}>#2</span>  Dovid R.</span><span>148 <span style={styles.climbGap}>(+6)</span></span></div>
+        <div style={{...styles.climbRow, ...styles.climbRowYou}}><span><span style={styles.climbRank}>#3</span>  You</span><span>142</span></div>
+      </div>
+
+      <div style={styles.tiles}>
+        <Tile icon="🏆" label="Leaderboard"/>
+        <Tile icon="🎁" label="Rewards"/>
+        <Tile icon="🚗" label="Rides"/>
+      </div>
+    </div>
+  );
+}
+
+/* ===== 03. Decline Flow ===== */
+
+function DeclineFlow() {
+  return (
+    <div style={styles.appBody}>
+      <AppHeader crumb="← Back to Home"/>
+      <div style={{padding:'20px 6px', display:'flex', flexDirection:'column', flex:1}}>
+        <div style={styles.flowQ}>Can't make Thursday morning?</div>
+        <div style={styles.flowSub}>Letting us know in advance helps the gabbai plan.</div>
+
+        <div style={styles.flowWarn}>
+          <strong style={styles.flowWarnStrong}>HEADS UP</strong>
+          Thursday is the Cohen family yahrzeit minyan — only 8 committed. Your contribution to the pool still helps, and the gabbai may still reach out.
+        </div>
+
+        <div style={{marginTop:'auto', display:'flex', flexDirection:'column', gap:8}}>
+          <div style={{...styles.flowBtn, ...styles.flowBtnPrimary}}>Yes, I'm out — continue</div>
+          <div style={styles.flowBtn}>Support the Cohens instead →</div>
+          <div style={{...styles.flowBtn, ...styles.flowBtnOutline}}>Actually, I'll come</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ===== 04. Leaderboard ===== */
+
+function Leaderboard() {
+  return (
+    <div style={styles.appBody}>
+      <AppHeader left="Leaderboard" leftEm="March · 5786" right="ⓘ"/>
+
+      <div style={styles.prizeBanner}>
+        <strong style={styles.prizeBannerStrong}>🏆 LAUNCH MONTH · $200 / $75 / $50</strong>
+        Plus $100 if you hit a 30-day streak — no cap
+      </div>
+
+      <div style={styles.periodToggle}>
+        <span style={{...styles.periodOpt, ...styles.periodOptActive}}>Month</span>
+        <span style={styles.periodOpt}>Quarter · $300 prize</span>
+        <span style={styles.periodOpt}>All-Time</span>
+      </div>
+
+      <LbRow rank="1" medal initials="SK" name="Shlomo K." meta="🔥 14-day streak" points="158" trend="up"/>
+      <LbRow rank="2" medal initials="DR" name="Dovid R." meta="🔥 9-day streak" points="148" trend="up"/>
+      <div style={{background:'#efe6cf', margin:'0 -20px', padding:'0 20px'}}>
+        <LbRow rank="3" medal initials="EW" name="You" meta="🔥 7-day streak" points="142" trend="flat"/>
+      </div>
+      <LbRow rank="4" initials="YB" name="Yoni B." meta="6-day streak" points="128" trend="down"/>
+      <LbRow rank="5" initials="AH" name="Ari H." meta="3-day streak" points="104" trend="up"/>
+
+      <div style={{...styles.sectionLabel, marginTop:14}}>Adult Recognition · March</div>
+      <div style={styles.recognitionRow}>
+        <span style={{fontSize:12, color:'#1d2e42'}}>🕯️ <strong>Rabbi Stein</strong></span>
+        <span style={{fontSize:10, color:'#8f6d3c', fontStyle:'italic'}}>100 consecutive days</span>
+      </div>
+      <div style={styles.recognitionRow}>
+        <span style={{fontSize:12, color:'#1d2e42'}}>⭐ <strong>Cohen, Weiss, Roth +8</strong></span>
+        <span style={{fontSize:10, color:'#8f6d3c', fontStyle:'italic'}}>25+ minyanim</span>
+      </div>
+      <div style={styles.recognitionRow}>
+        <span style={{fontSize:12, color:'#1d2e42'}}>🙌 <strong>Answered the call</strong></span>
+        <span style={{fontSize:10, color:'#8f6d3c', fontStyle:'italic'}}>14 rescues this month</span>
+      </div>
+    </div>
+  );
+}
+
+function LbRow({ rank, medal, initials, name, meta, points, trend }) {
+  const trendColor = trend === 'up' ? '#4a6b3e' : trend === 'down' ? '#a8372f' : '#8a8578';
+  const trendArrow = trend === 'up' ? '↑' : trend === 'down' ? '↓' : '—';
+  return (
+    <div style={styles.lbRow}>
+      <div style={{...styles.lbRank, color: medal ? '#8f6d3c' : '#3a4d65'}}>{rank}</div>
+      <div style={styles.avatar}>{initials}</div>
+      <div style={{flex:1}}>
+        <div style={styles.lbName}>{name}</div>
+        <div style={styles.lbMeta}>{meta}</div>
+      </div>
+      <div style={styles.lbPoints}>
+        {points} <span style={{color:trendColor, fontSize:10}}>{trendArrow}</span>
+      </div>
+    </div>
+  );
+}
+
+/* ===== 05. Rides ===== */
+
+function Rides() {
+  return (
+    <div style={styles.appBody}>
+      <AppHeader left="Rides" leftEm="Thu Shacharit · 6:35 AM" right="+"/>
+      <div style={styles.rideToggles}>
+        <div style={styles.toggleRow}>
+          <span>I need a ride tomorrow</span>
+          <Toggle on={false}/>
+        </div>
+        <div style={{...styles.toggleRow, borderTop:'1px solid rgba(15,30,46,0.08)', paddingTop:10, marginTop:4}}>
+          <span>I can offer a ride tomorrow</span>
+          <Toggle on={true}/>
+        </div>
+        <div style={{fontSize:10, color:'#8a8578', marginTop:8, fontStyle:'italic'}}>
+          Neighborhood: East Paramus
+        </div>
+      </div>
+
+      <div style={styles.sectionLabel}>Need a Ride (2)</div>
+      <RideItem name="Sam Goldstein" nbhd="West Paramus · age 78" btn="I'll pick up"/>
+      <RideItem name="Michael Roth" nbhd="Oradell border" btn="I'll pick up"/>
+
+      <div style={{...styles.sectionLabel, marginTop:18}}>Offering Rides (3)</div>
+      <RideItem name="Jeremy L." nbhd="East Paramus · can take 1" btn="You" outline/>
+      <RideItem name="David Weiss" nbhd="Central · can take 2" btn="Contact" outline/>
+    </div>
+  );
+}
+
+function RideItem({ name, nbhd, btn, outline }) {
+  return (
+    <div style={styles.rideItem}>
+      <div>
+        <div style={{fontSize:13, fontWeight:600, color:'#0f1e2e'}}>{name}</div>
+        <div style={{fontSize:10, color:'#8a8578', fontStyle:'italic'}}>{nbhd}</div>
+      </div>
+      <div style={outline ? styles.rideBtnOutline : styles.rideBtn}>{btn}</div>
+    </div>
+  );
+}
+
+function Toggle({ on }) {
+  return (
+    <div style={{
+      width:36, height:20,
+      background: on ? '#4a6b3e' : 'rgba(15,30,46,0.14)',
+      borderRadius:20, position:'relative', transition:'background 0.2s'
+    }}>
+      <div style={{
+        position:'absolute', top:2, left: on ? 18 : 2,
+        width:16, height:16, background:'white',
+        borderRadius:'50%', boxShadow:'0 1px 3px rgba(0,0,0,0.2)',
+        transition:'left 0.2s'
+      }}/>
+    </div>
+  );
+}
+
+/* ===== 06. Sponsor ===== */
+
+function Sponsor() {
+  return (
+    <div style={styles.appBody}>
+      <AppHeader crumb="← Home"/>
+
+      <div style={styles.sponsorHero}>
+        <div style={styles.sponsorStar}>✡</div>
+        <div style={styles.sponsorHeroH}>Support the Minyan</div>
+        <div style={styles.sponsorHeroP}>Fund the young men making daily minyan possible — and honor whoever you choose.</div>
+        <div style={styles.sponsorPool}>POOL · $3,240 · 47 sponsors</div>
+      </div>
+
+      <div style={styles.sectionLabel}>Choose an Amount</div>
+      <div style={styles.tierGrid}>
+        <Tier amount="$18" name="Chai"/>
+        <Tier amount="$36" name="Double Chai" selected/>
+        <Tier amount="$54" name="Triple Chai"/>
+        <Tier amount="$100" name="Benefactor"/>
+      </div>
+
+      <div style={styles.sectionLabel}>How to Contribute</div>
+      <div style={{...styles.typeChoice, ...styles.typeChoicePrimary}}>
+        <div style={styles.typeTitle}>Dedicate to a specific date</div>
+        <div style={styles.typeDesc}>Your dedication appears at that minyan · tax-deductible</div>
+      </div>
+      <div style={styles.typeChoice}>
+        <div style={styles.typeTitle}>Contribute to the pool</div>
+        <div style={styles.typeDesc}>Anonymous · tax-deductible</div>
+      </div>
+
+      <div style={{marginTop:'auto'}}>
+        <div style={{...styles.flowBtn, ...styles.flowBtnPrimary}}>Continue · $36</div>
+      </div>
+    </div>
+  );
+}
+
+function Tier({ amount, name, selected }) {
+  return (
+    <div style={{
+      ...styles.tier,
+      ...(selected ? styles.tierSelected : {})
+    }}>
+      <div style={styles.tierAmount}>{amount}</div>
+      <div style={styles.tierName}>{name}</div>
+    </div>
+  );
+}
+
+/* ===== 07. Yahrzeit Prompt ===== */
+
+function YahrzeitPrompt() {
+  return (
+    <div style={styles.appBody}>
+      <AppHeader left="Beth Tefillah" leftEm="Notification · 7 days out" right="JL"/>
+
+      <div style={{padding:'10px 4px', flex:1, display:'flex', flexDirection:'column'}}>
+        <div style={styles.yahrzeitCandle}>🕯️</div>
+
+        <div style={styles.yahrzeitH}>Next Thursday is your father's yahrzeit</div>
+        <div style={styles.yahrzeitSub}>Moshe ben Avraham, z"l · 14 Adar</div>
+
+        <div style={styles.yahrzeitCard}>
+          <div style={styles.yahrzeitCardLabel}>HONOR HIS MEMORY WITH THE MINYAN</div>
+          <div style={styles.yahrzeitCardBody}>
+            Sponsor Thursday morning's shacharit in his memory. Your dedication will be visible to the kehilla, and extra care will be taken to ensure a full minyan.
+          </div>
+        </div>
+
+        <div style={styles.yahrzeitTiers}>
+          <div style={styles.yahrzeitTier}>
+            <div style={styles.yahrzeitTierAmt}>$36</div>
+            <div style={styles.yahrzeitTierN}>Chai x 2</div>
+          </div>
+          <div style={{...styles.yahrzeitTier, ...styles.yahrzeitTierSel}}>
+            <div style={styles.yahrzeitTierAmt}>$100</div>
+            <div style={styles.yahrzeitTierN}>Full minyan</div>
+          </div>
+          <div style={styles.yahrzeitTier}>
+            <div style={styles.yahrzeitTierAmt}>$180</div>
+            <div style={styles.yahrzeitTierN}>Chai x 10</div>
+          </div>
+        </div>
+
+        <div style={{marginTop:'auto', display:'flex', flexDirection:'column', gap:8}}>
+          <div style={{...styles.flowBtn, ...styles.flowBtnPrimary}}>Sponsor · $100</div>
+          <div style={{...styles.flowBtn, ...styles.flowBtnOutline, fontSize:11}}>Remind me closer to the date</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ===== 08. Gabbai Dashboard ===== */
+
+function GabbaiDash() {
+  return (
+    <div style={styles.appBody}>
+      <AppHeader left="Gabbai Console" leftEm="Rabbi Stein · Admin" right="⚙"/>
+
+      <div style={styles.alertCard}>
+        <div style={styles.alertH}>Thursday AM · 8 committed</div>
+        <div style={styles.alertSub}>Below threshold. Yahrzeit minyan — extra sensitivity. 4 members marked "call me."</div>
+        <div style={styles.alertBtn}>SEND RED ALERT →</div>
+      </div>
+
+      <div style={{...styles.sectionLabel, marginTop:14}}>Thursday's Roster</div>
+      <RosterRow checked initials="JL" name="Jeremy L." meta="committed"/>
+      <RosterRow checked initials="DW" name="David W." meta="offering ride" metaColor="#4a6b3e"/>
+      <RosterRow initials="SG" name="Sam G." meta="needs ride" metaColor="#c2842a"/>
+      <RosterRow checked initials="EW" name="Eli W." teen meta="🔥 7"/>
+      <RosterRow initials="MR" name="Michael R." meta="no response" metaColor="#a8372f"/>
+
+      <div style={styles.adminActions}>
+        <div style={styles.adminBtn}>+ Add Member</div>
+        <div style={styles.adminBtn}>Edit Times</div>
+        <div style={styles.adminBtn}>Month Wrap-Up</div>
+        <div style={styles.adminBtn}>Economy</div>
+      </div>
+    </div>
+  );
+}
+
+function RosterRow({ checked, initials, name, teen, meta, metaColor='#8a8578' }) {
+  return (
+    <div style={styles.rosterRow}>
+      <div style={checked ? {...styles.check, ...styles.checkOn} : styles.check}>
+        {checked && '✓'}
+      </div>
+      <div style={styles.avatar}>{initials}</div>
+      <div style={{flex:1, fontSize:12, color:'#0f1e2e'}}>
+        {name} {teen && <em style={{color:'#8f6d3c', fontSize:9}}>· teen</em>}
+      </div>
+      <div style={{fontSize:9, color:metaColor}}>{meta}</div>
+    </div>
+  );
+}
+
+/* ===== 09. Profile ===== */
+
+function Profile() {
+  return (
+    <div style={styles.appBody}>
+      <AppHeader crumb="← Home" right={<span style={{fontSize:11, color:'#8f6d3c'}}>Edit</span>}/>
+
+      <div style={styles.profileHero}>
+        <div style={styles.profileAvatar}>EW</div>
+        <div style={styles.profileName}>Eli Weiss</div>
+        <div style={styles.profileRole}>TEEN · MEMBER SINCE 5784</div>
+      </div>
+
+      <div style={styles.statsMini}>
+        <StatMini n="142" l="Pts · Mar"/>
+        <StatMini n="7" l="Streak"/>
+        <StatMini n="38" l="All-Time"/>
+      </div>
+
+      <div style={styles.sectionLabel}>Rewards Claimed</div>
+      <div style={{fontSize:12, color:'#3a4d65', padding:'8px 0 16px', fontStyle:'italic'}}>
+        Feb 5786 · $25 Amazon — 2nd place teen
+      </div>
+
+      <div style={styles.sectionLabel}>Notifications</div>
+      <SettingRow label="Commitment reminders" on/>
+      <SettingRow label="Red alerts" on/>
+      <SettingRow label="Ride requests"/>
+      <SettingRow label="Rewards updates" on/>
+
+      <div style={{marginTop:'auto', textAlign:'center', paddingTop:20}}>
+        <div style={{fontSize:11, color:'#8f6d3c', fontWeight:600, letterSpacing:0.05+'em'}}>CONTACT GABBAI</div>
+      </div>
+    </div>
+  );
+}
+
+function StatMini({ n, l }) {
+  return (
+    <div style={styles.statMini}>
+      <div style={styles.statMiniN}>{n}</div>
+      <div style={styles.statMiniL}>{l}</div>
+    </div>
+  );
+}
+
+function SettingRow({ label, on }) {
+  return (
+    <div style={styles.settingRow}>
+      <span>{label}</span>
+      <Toggle on={!!on}/>
+    </div>
+  );
+}
+
+/* ===== 10. Economy Calculator (interactive!) ===== */
+
+function EconomyCalculator() {
+  const [pool, setPool] = useState(3500);
+  const [teens, setTeens] = useState(18);
+  const [attendPer, setAttendPer] = useState(14);
+  const [pointsPerMinyan, setPointsPerMinyan] = useState(8);
+  const [pointDollar, setPointDollar] = useState(0.25);
+  const [topPrize, setTopPrize] = useState(200);
+  const [prize2, setPrize2] = useState(75);
+  const [prize3, setPrize3] = useState(50);
+  const [quarterlyPrize, setQuarterlyPrize] = useState(300);
+  const [streakBonus, setStreakBonus] = useState(100);
+  const [monthlySponsor, setMonthlySponsor] = useState(400);
+  const [frontLoad, setFrontLoad] = useState(true);
+
+  const math = useMemo(() => {
+    const teenAccrual = teens * attendPer * pointsPerMinyan * pointDollar;
+    const monthlyPrizes = topPrize + prize2 + prize3;
+    const quarterlyAmortized = quarterlyPrize / 3;
+    const streakBonusCost = streakBonus * 0.3;
+    const monthlyOut = teenAccrual + monthlyPrizes + quarterlyAmortized + streakBonusCost;
+    const net = monthlySponsor - monthlyOut;
+    const runway = net >= 0 ? 999 : pool / (monthlyOut - monthlySponsor);
+
+    const chart = [];
+    let balance = pool;
+    for (let i = 0; i < 18; i++) {
+      let out = monthlyOut;
+      if (frontLoad && i < 3) out *= 1.4;
+      balance = balance + monthlySponsor - out;
+      chart.push({ month: i + 1, balance: Math.max(0, Math.round(balance)) });
+    }
+
+    return {
+      teenAccrual: Math.round(teenAccrual),
+      monthlyPrizes,
+      monthlyOut: Math.round(monthlyOut),
+      net: Math.round(net),
+      runway: runway > 99 ? 'Sustainable ∞' : `${runway.toFixed(1)} mo`,
+      chart,
+      healthy: net >= 0 || runway > 12
+    };
+  }, [pool, teens, attendPer, pointsPerMinyan, pointDollar, topPrize, prize2, prize3, quarterlyPrize, streakBonus, monthlySponsor, frontLoad]);
+
+  return (
+    <div style={styles.ecoWrap}>
+      <div style={styles.ecoLeft}>
+        <div style={styles.ecoSection}>
+          <div style={styles.ecoSectionTitle}>Starting Conditions</div>
+          <Slider label="Initial pool" value={pool} min={1000} max={8000} step={100} format={v=>`$${v.toLocaleString()}`} onChange={setPool}/>
+          <Slider label="Active teens" value={teens} min={5} max={40} step={1} onChange={setTeens}/>
+          <Slider label="Avg teen attendance / month" value={attendPer} min={4} max={30} step={1} format={v=>`${v} minyanim`} onChange={setAttendPer}/>
+          <Slider label="Monthly sponsorship (expected)" value={monthlySponsor} min={0} max={1500} step={25} format={v=>`$${v}`} onChange={setMonthlySponsor}/>
+        </div>
+
+        <div style={styles.ecoSection}>
+          <div style={styles.ecoSectionTitle}>Point Economy</div>
+          <Slider label="Points per minyan" value={pointsPerMinyan} min={4} max={15} step={1} format={v=>`${v} pts`} onChange={setPointsPerMinyan}/>
+          <Slider label="Point value" value={pointDollar} min={0.10} max={0.50} step={0.05} format={v=>`$${v.toFixed(2)}`} onChange={setPointDollar}/>
+          <div style={styles.ecoNote}>1 minyan = <strong>${(pointsPerMinyan * pointDollar).toFixed(2)}</strong> · 100 pts = <strong>${(100 * pointDollar).toFixed(0)}</strong></div>
+        </div>
+
+        <div style={styles.ecoSection}>
+          <div style={styles.ecoSectionTitle}>Prizes</div>
+          <Slider label="Monthly #1 prize" value={topPrize} min={50} max={400} step={25} format={v=>`$${v}`} onChange={setTopPrize}/>
+          <Slider label="Monthly #2 prize" value={prize2} min={0} max={200} step={25} format={v=>`$${v}`} onChange={setPrize2}/>
+          <Slider label="Monthly #3 prize" value={prize3} min={0} max={150} step={10} format={v=>`$${v}`} onChange={setPrize3}/>
+          <Slider label="Quarterly super prize" value={quarterlyPrize} min={0} max={600} step={50} format={v=>`$${v}`} onChange={setQuarterlyPrize}/>
+          <Slider label="30-day streak bonus" value={streakBonus} min={0} max={250} step={25} format={v=>`$${v}`} onChange={setStreakBonus}/>
+          <label style={styles.checkRow}>
+            <input type="checkbox" checked={frontLoad} onChange={e=>setFrontLoad(e.target.checked)}/>
+            <span>Front-load Q1 spend by 40% (recommended for launch)</span>
+          </label>
+        </div>
+      </div>
+
+      <div style={styles.ecoRight}>
+        <div style={styles.ecoSummary}>
+          <div style={styles.ecoSummaryTitle}>At a glance</div>
+          <div style={styles.ecoStats}>
+            <EcoStat label="Teen attendance rewards" value={`$${math.teenAccrual}`} hint="/ month"/>
+            <EcoStat label="Prize structure" value={`$${math.monthlyPrizes}`} hint="+ quarterly"/>
+            <EcoStat label="Total monthly outflow" value={`$${math.monthlyOut}`} emphasis/>
+            <EcoStat label="Net of sponsorship" value={`${math.net >= 0 ? '+' : ''}$${math.net}`} good={math.net >= 0} bad={math.net < 0}/>
+            <EcoStat label="Projected runway" value={math.runway} good={math.healthy} bad={!math.healthy} emphasis/>
+          </div>
+        </div>
+
+        <div style={styles.chartWrap}>
+          <div style={styles.chartTitle}>18-month pool projection</div>
+          <Chart data={math.chart}/>
+          <div style={styles.chartFoot}>
+            <span>Month →</span>
+            <span>{math.healthy ? '✓ sustainable at these settings' : '⚠ pool exhausts before 18 months'}</span>
+          </div>
+        </div>
+
+        <div style={styles.ecoAdvice}>
+          <strong>Recommended starting point for CBT:</strong> Launch-heavy config with $200 top prize, front-loaded Q1. With 18 teens attending ~14 times each and $400/mo sponsorships, runway is healthy. Raise the top prize to $250 to drive signup; watch the sponsorship rate closely in weeks 3-6 and adjust.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Slider({ label, value, min, max, step, format, onChange }) {
+  return (
+    <div style={styles.sliderRow}>
+      <div style={styles.sliderLabel}>
+        <span>{label}</span>
+        <strong>{format ? format(value) : value}</strong>
+      </div>
+      <input type="range" min={min} max={max} step={step} value={value}
+        onChange={e=>onChange(parseFloat(e.target.value))}
+        style={styles.slider}/>
+    </div>
+  );
+}
+
+function EcoStat({ label, value, hint, emphasis, good, bad }) {
+  const color = good ? '#4a6b3e' : bad ? '#a8372f' : '#0f1e2e';
+  return (
+    <div style={{...styles.ecoStat, ...(emphasis ? styles.ecoStatEmph : {})}}>
+      <div style={styles.ecoStatLabel}>{label}</div>
+      <div style={{...styles.ecoStatValue, color, fontSize: emphasis ? 24 : 18}}>
+        {value}
+        {hint && <span style={styles.ecoStatHint}>{hint}</span>}
+      </div>
+    </div>
+  );
+}
+
+function Chart({ data }) {
+  const max = Math.max(...data.map(d=>d.balance), 1);
+  const w = 100 / data.length;
+  return (
+    <svg viewBox="0 0 100 40" preserveAspectRatio="none" style={{width:'100%', height:160, display:'block'}}>
+      <defs>
+        <linearGradient id="cgrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#b8935a" stopOpacity="0.4"/>
+          <stop offset="100%" stopColor="#b8935a" stopOpacity="0"/>
+        </linearGradient>
+      </defs>
+      <line x1="0" y1="38" x2="100" y2="38" stroke="rgba(15,30,46,0.1)" strokeWidth="0.2"/>
+      <line x1="0" y1="20" x2="100" y2="20" stroke="rgba(15,30,46,0.06)" strokeWidth="0.2" strokeDasharray="1,1"/>
+      <path d={`M 0 38 ${data.map((d, i) => {
+        const x = i * w + w/2;
+        const y = 38 - (d.balance / max) * 36;
+        return `L ${x} ${y}`;
+      }).join(' ')} L 100 38 Z`} fill="url(#cgrad)"/>
+      <path d={`M ${w/2} ${38 - (data[0].balance / max) * 36} ${data.map((d, i) => {
+        if (i === 0) return '';
+        const x = i * w + w/2;
+        const y = 38 - (d.balance / max) * 36;
+        return `L ${x} ${y}`;
+      }).join(' ')}`} fill="none" stroke="#8f6d3c" strokeWidth="0.6"/>
+      {data.map((d, i) => {
+        const x = i * w + w/2;
+        const y = 38 - (d.balance / max) * 36;
+        return <circle key={i} cx={x} cy={y} r="0.6" fill="#0f1e2e"/>;
+      })}
+    </svg>
+  );
+}
+
+/* ===== Styles ===== */
+
+const styles = {
+  page: {
+    fontFamily: '"Inter", system-ui, sans-serif',
+    background: 'radial-gradient(ellipse at top left, #1a2c42 0%, transparent 60%), radial-gradient(ellipse at bottom right, #2a1f1a 0%, transparent 60%), #0a1520',
+    minHeight: '100vh',
+    padding: '60px 40px 80px',
+    color: '#f7f1e3',
+    WebkitFontSmoothing: 'antialiased'
+  },
+  header: { maxWidth: 1400, margin: '0 auto 60px', textAlign: 'center' },
+  eyebrow: {
+    fontFamily: '"JetBrains Mono", monospace',
+    fontSize: 11,
+    letterSpacing: '0.3em',
+    textTransform: 'uppercase',
+    color: '#d9c194',
+    marginBottom: 20
+  },
+  h1: {
+    fontFamily: '"Cormorant Garamond", Georgia, serif',
+    fontSize: 56, fontWeight: 500, letterSpacing: '-0.02em',
+    lineHeight: 1.05, marginBottom: 18
+  },
+  h1em: { fontStyle: 'italic', color: '#d9c194', fontWeight: 400 },
+  headerP: {
+    fontSize: 15, lineHeight: 1.6, maxWidth: 620,
+    margin: '0 auto', color: 'rgba(247, 241, 227, 0.65)'
+  },
+  legend: {
+    display: 'flex', justifyContent: 'center', gap: 28, marginTop: 32,
+    fontFamily: '"JetBrains Mono", monospace', fontSize: 11,
+    letterSpacing: '0.15em', textTransform: 'uppercase',
+    color: 'rgba(247, 241, 227, 0.55)'
+  },
+  legendItem: { display: 'flex', alignItems: 'center', gap: 8 },
+  dot: { width: 8, height: 8, borderRadius: '50%' },
+
+  grid: {
+    maxWidth: 1400, margin: '0 auto',
+    display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: '60px 40px', justifyItems: 'center'
+  },
+  screenWrap: { display: 'flex', flexDirection: 'column', alignItems: 'center' },
+  screenLabel: {
+    fontFamily: '"JetBrains Mono", monospace', fontSize: 10,
+    letterSpacing: '0.25em', textTransform: 'uppercase',
+    color: '#d9c194', marginBottom: 10
+  },
+  screenTitle: {
+    fontFamily: '"Cormorant Garamond", Georgia, serif',
+    fontSize: 22, fontWeight: 500, color: '#f7f1e3', marginBottom: 4
+  },
+  screenSub: {
+    fontSize: 12, color: 'rgba(247, 241, 227, 0.55)',
+    marginBottom: 20, fontStyle: 'italic'
+  },
+
+  iphone: {
+    width: 340, height: 700, background: '#0a0a0a',
+    borderRadius: 48, padding: 10,
+    boxShadow: '0 0 0 2px #1a1a1a, 0 40px 80px -20px rgba(0,0,0,0.5), 0 20px 40px -10px rgba(0,0,0,0.4)',
+    position: 'relative'
+  },
+  iphoneWide: {
+    gridColumn: '1 / -1',
+    width: '100%', maxWidth: 1100, minHeight: 620,
+    background: '#faf6ec',
+    borderRadius: 20, padding: 30,
+    boxShadow: '0 40px 80px -20px rgba(0,0,0,0.4)',
+    border: '1px solid rgba(184, 147, 90, 0.3)'
+  },
+  notch: {
+    position: 'absolute', top: 22, left: '50%',
+    transform: 'translateX(-50%)', width: 100, height: 30,
+    background: '#0a0a0a', borderRadius: 20, zIndex: 10
+  },
+  screenSurface: {
+    width: '100%', height: 680, background: '#faf6ec',
+    borderRadius: 38, overflow: 'hidden', position: 'relative',
+    color: '#0f1e2e', display: 'flex', flexDirection: 'column'
+  },
+  screenSurfaceWide: {
+    width: '100%', color: '#0f1e2e', display: 'flex', flexDirection: 'column'
+  },
+  statusBar: {
+    height: 50, display: 'flex', justifyContent: 'space-between',
+    alignItems: 'flex-end', padding: '0 28px 6px',
+    fontSize: 14, fontWeight: 600, color: '#0f1e2e'
+  },
+  statusRight: { display: 'flex', gap: 6, alignItems: 'center', fontSize: 13 },
+
+  appBody: { flex: 1, overflow: 'hidden', padding: '8px 20px 20px', display: 'flex', flexDirection: 'column' },
+
+  appHeader: {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    padding: '8px 0 18px', borderBottom: '1px solid rgba(15,30,46,0.08)',
+    marginBottom: 18
+  },
+  shulMark: {
+    fontFamily: '"Cormorant Garamond", Georgia, serif',
+    fontSize: 13, letterSpacing: '0.08em', color: '#0f1e2e', fontWeight: 500
+  },
+  shulMarkEm: {
+    display: 'block', fontStyle: 'italic', fontSize: 10,
+    letterSpacing: '0.15em', textTransform: 'uppercase',
+    color: '#8f6d3c', fontWeight: 400, marginTop: 2
+  },
+  headerIcon: {
+    width: 32, height: 32, borderRadius: '50%', background: '#efe6cf',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontSize: 14, color: '#0f1e2e', border: '1px solid rgba(15,30,46,0.14)',
+    fontFamily: '"Inter", sans-serif', fontWeight: 600
+  },
+
+  sectionLabel: {
+    fontFamily: '"JetBrains Mono", monospace',
+    fontSize: 9, letterSpacing: '0.25em', textTransform: 'uppercase',
+    color: '#8a8578', marginBottom: 10
+  },
+
+  /* Sponsored minyan */
+  sponsoredCard: {
+    background: 'linear-gradient(135deg, #faf6ec 0%, #efe6cf 100%)',
+    border: '1.5px solid #b8935a',
+    borderRadius: 12, padding: 12, marginBottom: 14,
+    position: 'relative'
+  },
+  sponsoredRibbon: {
+    fontSize: 9, fontFamily: '"JetBrains Mono", monospace',
+    letterSpacing: '0.2em', color: '#8f6d3c', fontWeight: 700,
+    marginBottom: 6
+  },
+  sponsoredTitle: {
+    fontFamily: '"Cormorant Garamond", Georgia, serif',
+    fontSize: 17, fontWeight: 600, color: '#0f1e2e', marginBottom: 3
+  },
+  sponsoredDedi: {
+    fontFamily: '"Cormorant Garamond", Georgia, serif',
+    fontSize: 12, fontStyle: 'italic', color: '#1d2e42', marginBottom: 8
+  },
+  sponsoredFooter: {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    fontSize: 10, color: '#8a8578', fontStyle: 'italic'
+  },
+  sponsoredCount: {
+    background: 'rgba(194,132,42,0.14)', color: '#c2842a',
+    padding: '3px 8px', borderRadius: 12,
+    fontFamily: '"JetBrains Mono", monospace', fontWeight: 600, fontStyle: 'normal'
+  },
+
+  minyanLine: {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    padding: '12px 0', borderBottom: '1px solid rgba(15,30,46,0.08)'
+  },
+  minyanTitle: {
+    fontFamily: '"Cormorant Garamond", Georgia, serif',
+    fontSize: 18, fontWeight: 500, color: '#0f1e2e', marginBottom: 2
+  },
+  minyanTime: { fontSize: 11, color: '#3a4d65' },
+
+  pill: {
+    padding: '4px 10px', borderRadius: 20, fontSize: 12,
+    fontWeight: 600, fontFamily: '"JetBrains Mono", monospace',
+    display: 'flex', alignItems: 'center', gap: 5
+  },
+  pillOk: { background: 'rgba(74,107,62,0.12)', color: '#4a6b3e' },
+  pillWarn: { background: 'rgba(194,132,42,0.14)', color: '#c2842a' },
+  pillAlert: { background: 'rgba(168,55,47,0.12)', color: '#a8372f' },
+
+  commitCard: {
+    background: 'linear-gradient(135deg, #0f1e2e 0%, #1d2e42 100%)',
+    borderRadius: 14, padding: 18, margin: '14px 0',
+    color: '#f7f1e3', position: 'relative', overflow: 'hidden'
+  },
+  commitGlow: {
+    position: 'absolute', top: -40, right: -40,
+    width: 120, height: 120,
+    background: 'radial-gradient(circle, rgba(217,193,148,0.15) 0%, transparent 70%)'
+  },
+  commitTitle: {
+    fontFamily: '"Cormorant Garamond", Georgia, serif',
+    fontSize: 15, fontWeight: 500, marginBottom: 3, position: 'relative'
+  },
+  commitSub: { fontSize: 11, color: 'rgba(247,241,227,0.65)', marginBottom: 14, position: 'relative' },
+  commitBtns: { display: 'flex', gap: 6, position: 'relative' },
+  commitBtn: {
+    flex: 1, padding: '10px 4px',
+    background: 'rgba(247,241,227,0.08)',
+    border: '1px solid rgba(247,241,227,0.15)',
+    borderRadius: 8, color: '#f7f1e3', fontSize: 10,
+    fontWeight: 500, textAlign: 'center', letterSpacing: '0.02em'
+  },
+  commitBtnPrimary: {
+    background: '#b8935a', borderColor: '#b8935a',
+    color: '#0f1e2e', fontWeight: 600
+  },
+
+  poolCard: {
+    background: '#efe6cf', border: '1px solid rgba(15,30,46,0.14)',
+    borderRadius: 10, padding: '12px 14px',
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    marginBottom: 14
+  },
+  poolLabel: {
+    fontFamily: '"JetBrains Mono", monospace', fontSize: 9,
+    letterSpacing: '0.2em', textTransform: 'uppercase',
+    color: '#8f6d3c', marginBottom: 2
+  },
+  poolAmount: {
+    fontFamily: '"Cormorant Garamond", Georgia, serif',
+    fontSize: 22, fontWeight: 600, color: '#0f1e2e'
+  },
+  poolCta: { fontSize: 11, color: '#8f6d3c', fontWeight: 600 },
+
+  tiles: {
+    display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: 8, marginTop: 'auto'
+  },
+  tile: {
+    background: '#efe6cf', border: '1px solid rgba(15,30,46,0.08)',
+    borderRadius: 10, padding: '14px 8px', textAlign: 'center'
+  },
+  tileIcon: { fontSize: 18, marginBottom: 4 },
+  tileLabel: { fontSize: 10, fontWeight: 600, color: '#0f1e2e' },
+
+  /* Teen stats */
+  statsStrip: {
+    background: 'linear-gradient(135deg, #2a1f1a 0%, #0f1e2e 100%)',
+    borderRadius: 14, padding: 16, color: '#f7f1e3',
+    marginBottom: 14, position: 'relative', overflow: 'hidden'
+  },
+  statsGlow: {
+    position: 'absolute', top: -30, right: -30,
+    width: 100, height: 100,
+    background: 'radial-gradient(circle, rgba(214,112,80,0.2) 0%, transparent 70%)'
+  },
+  statsName: {
+    fontFamily: '"Cormorant Garamond", Georgia, serif',
+    fontSize: 13, color: 'rgba(247,241,227,0.7)', marginBottom: 8, position: 'relative'
+  },
+  statsRow: { display: 'flex', gap: 20, position: 'relative' },
+  stat: { flex: 1 },
+  statValue: {
+    fontFamily: '"Cormorant Garamond", Georgia, serif',
+    fontSize: 24, fontWeight: 600, color: '#d9c194',
+    lineHeight: 1, marginBottom: 3
+  },
+  statLabel: {
+    fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase',
+    color: 'rgba(247,241,227,0.55)', fontWeight: 500
+  },
+  prizeBanner: {
+    background: 'linear-gradient(135deg, #d9c194 0%, #b8935a 100%)',
+    color: '#0f1e2e', padding: '12px 14px', borderRadius: 10,
+    marginBottom: 14, fontSize: 11, lineHeight: 1.5
+  },
+  prizeBannerStrong: {
+    fontFamily: '"Cormorant Garamond", Georgia, serif',
+    fontSize: 14, fontWeight: 700, display: 'block', marginBottom: 2
+  },
+
+  climbCard: {
+    background: '#efe6cf', border: '1px solid rgba(15,30,46,0.08)',
+    borderRadius: 12, padding: 14, marginBottom: 14
+  },
+  climbTitle: {
+    fontFamily: '"Cormorant Garamond", Georgia, serif',
+    fontSize: 15, fontWeight: 500, marginBottom: 10, color: '#0f1e2e'
+  },
+  climbRow: {
+    display: 'flex', justifyContent: 'space-between',
+    padding: '6px 0', fontSize: 12, color: '#3a4d65',
+    borderBottom: '1px dashed rgba(15,30,46,0.08)'
+  },
+  climbRowYou: { color: '#0f1e2e', fontWeight: 700, borderBottom: 'none' },
+  climbRank: { fontFamily: '"JetBrains Mono", monospace', fontSize: 11 },
+  climbGap: {
+    color: '#8f6d3c', fontFamily: '"JetBrains Mono", monospace', fontSize: 11
+  },
+
+  /* Flow */
+  flowQ: {
+    fontFamily: '"Cormorant Garamond", Georgia, serif',
+    fontSize: 24, fontWeight: 500, lineHeight: 1.25,
+    color: '#0f1e2e', marginBottom: 8
+  },
+  flowSub: { fontSize: 12, color: '#3a4d65', lineHeight: 1.6, marginBottom: 24 },
+  flowWarn: {
+    background: 'rgba(194,132,42,0.1)',
+    borderLeft: '3px solid #c2842a',
+    padding: 12, borderRadius: '0 8px 8px 0',
+    fontSize: 11, lineHeight: 1.55, color: '#1d2e42', marginBottom: 18
+  },
+  flowWarnStrong: {
+    color: '#c2842a', fontWeight: 700, display: 'block',
+    marginBottom: 3, fontSize: 10, letterSpacing: '0.1em'
+  },
+  flowBtn: {
+    width: '100%', padding: 14, borderRadius: 10,
+    fontSize: 13, fontWeight: 600, textAlign: 'center',
+    border: '1px solid rgba(15,30,46,0.14)', background: '#faf6ec',
+    color: '#0f1e2e', letterSpacing: '0.02em', boxSizing: 'border-box'
+  },
+  flowBtnPrimary: { background: '#0f1e2e', color: '#f7f1e3', borderColor: '#0f1e2e' },
+  flowBtnOutline: { background: 'transparent' },
+
+  /* Leaderboard */
+  periodToggle: {
+    display: 'flex', justifyContent: 'space-between',
+    padding: '0 4px', marginBottom: 12, fontSize: 10
+  },
+  periodOpt: {
+    color: '#8a8578', letterSpacing: '0.08em',
+    textTransform: 'uppercase', fontWeight: 500
+  },
+  periodOptActive: { color: '#0f1e2e', fontWeight: 700 },
+
+  lbRow: {
+    display: 'flex', alignItems: 'center',
+    padding: '11px 4px', borderBottom: '1px solid rgba(15,30,46,0.08)',
+    gap: 12
+  },
+  lbRank: {
+    fontFamily: '"Cormorant Garamond", Georgia, serif',
+    fontSize: 18, fontWeight: 600, width: 22
+  },
+  avatar: {
+    width: 32, height: 32, borderRadius: '50%',
+    background: '#efe6cf', border: '1px solid rgba(15,30,46,0.14)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontSize: 11, fontWeight: 600, color: '#0f1e2e'
+  },
+  lbName: { fontSize: 13, fontWeight: 500, color: '#0f1e2e' },
+  lbMeta: { fontSize: 10, color: '#8a8578', marginTop: 1 },
+  lbPoints: {
+    fontFamily: '"JetBrains Mono", monospace',
+    fontSize: 13, fontWeight: 600, color: '#0f1e2e'
+  },
+  recognitionRow: {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    padding: '10px 0', borderBottom: '1px dashed rgba(15,30,46,0.08)'
+  },
+
+  /* Rides */
+  rideToggles: {
+    background: '#efe6cf', border: '1px solid rgba(15,30,46,0.08)',
+    borderRadius: 12, padding: 14, marginBottom: 16
+  },
+  toggleRow: {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    padding: '8px 0', fontSize: 12, color: '#0f1e2e'
+  },
+  rideItem: {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    padding: '12px 0', borderBottom: '1px solid rgba(15,30,46,0.08)'
+  },
+  rideBtn: {
+    background: '#0f1e2e', color: '#f7f1e3', borderRadius: 16,
+    padding: '6px 14px', fontSize: 10, fontWeight: 600,
+    letterSpacing: '0.03em'
+  },
+  rideBtnOutline: {
+    background: 'transparent', color: '#0f1e2e',
+    border: '1px solid #0f1e2e', borderRadius: 16,
+    padding: '5px 13px', fontSize: 10, fontWeight: 600
+  },
+
+  /* Sponsor */
+  sponsorHero: {
+    background: 'linear-gradient(135deg, #0f1e2e 0%, #1a2c42 100%)',
+    borderRadius: 16, padding: '20px 18px', color: '#f7f1e3',
+    marginBottom: 18, textAlign: 'center', position: 'relative', overflow: 'hidden'
+  },
+  sponsorStar: {
+    position: 'absolute', fontSize: 100, opacity: 0.04,
+    top: -20, right: -10, color: '#d9c194'
+  },
+  sponsorHeroH: {
+    fontFamily: '"Cormorant Garamond", Georgia, serif',
+    fontSize: 22, fontWeight: 500, marginBottom: 6, fontStyle: 'italic'
+  },
+  sponsorHeroP: {
+    fontSize: 11, lineHeight: 1.55,
+    color: 'rgba(247,241,227,0.7)', marginBottom: 14
+  },
+  sponsorPool: {
+    background: 'rgba(217,193,148,0.12)',
+    border: '1px solid rgba(217,193,148,0.2)',
+    borderRadius: 8, padding: 8,
+    fontFamily: '"JetBrains Mono", monospace',
+    fontSize: 12, color: '#d9c194'
+  },
+  tierGrid: {
+    display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)',
+    gap: 8, marginBottom: 14
+  },
+  tier: {
+    border: '1px solid rgba(15,30,46,0.14)',
+    borderRadius: 10, padding: '12px 10px',
+    textAlign: 'center', background: '#faf6ec'
+  },
+  tierSelected: {
+    background: '#0f1e2e', color: '#f7f1e3', borderColor: '#0f1e2e'
+  },
+  tierAmount: {
+    fontFamily: '"Cormorant Garamond", Georgia, serif',
+    fontSize: 22, fontWeight: 600, lineHeight: 1
+  },
+  tierName: {
+    fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase',
+    marginTop: 4, opacity: 0.7
+  },
+  typeChoice: {
+    border: '1px solid rgba(15,30,46,0.14)',
+    borderRadius: 10, padding: 12, marginBottom: 8,
+    fontSize: 12, color: '#0f1e2e'
+  },
+  typeChoicePrimary: {
+    background: '#efe6cf', borderColor: '#b8935a', borderWidth: 2
+  },
+  typeTitle: { fontWeight: 600, marginBottom: 2 },
+  typeDesc: { fontSize: 10, color: '#8a8578' },
+
+  /* Yahrzeit */
+  yahrzeitCandle: {
+    fontSize: 60, textAlign: 'center', margin: '20px 0 14px',
+    filter: 'drop-shadow(0 0 30px rgba(217,193,148,0.5))'
+  },
+  yahrzeitH: {
+    fontFamily: '"Cormorant Garamond", Georgia, serif',
+    fontSize: 22, fontWeight: 500, textAlign: 'center',
+    color: '#0f1e2e', marginBottom: 4, lineHeight: 1.2
+  },
+  yahrzeitSub: {
+    fontFamily: '"Cormorant Garamond", Georgia, serif',
+    fontSize: 14, fontStyle: 'italic', textAlign: 'center',
+    color: '#8f6d3c', marginBottom: 18
+  },
+  yahrzeitCard: {
+    background: '#efe6cf', border: '1px solid #b8935a',
+    borderRadius: 10, padding: 14, marginBottom: 14
+  },
+  yahrzeitCardLabel: {
+    fontSize: 9, fontFamily: '"JetBrains Mono", monospace',
+    letterSpacing: '0.2em', color: '#8f6d3c',
+    fontWeight: 700, marginBottom: 6
+  },
+  yahrzeitCardBody: { fontSize: 12, lineHeight: 1.5, color: '#0f1e2e' },
+  yahrzeitTiers: {
+    display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: 6, marginBottom: 14
+  },
+  yahrzeitTier: {
+    border: '1px solid rgba(15,30,46,0.14)',
+    borderRadius: 8, padding: '10px 6px', textAlign: 'center',
+    background: '#faf6ec'
+  },
+  yahrzeitTierSel: {
+    background: '#0f1e2e', color: '#f7f1e3', borderColor: '#0f1e2e'
+  },
+  yahrzeitTierAmt: {
+    fontFamily: '"Cormorant Garamond", Georgia, serif',
+    fontSize: 18, fontWeight: 600
+  },
+  yahrzeitTierN: { fontSize: 9, marginTop: 2, opacity: 0.7 },
+
+  /* Gabbai */
+  alertCard: {
+    background: 'linear-gradient(135deg, #a8372f 0%, #7e2922 100%)',
+    color: '#f7f1e3', borderRadius: 12, padding: 14, marginBottom: 14
+  },
+  alertH: {
+    fontFamily: '"Cormorant Garamond", Georgia, serif',
+    fontSize: 15, fontWeight: 500, marginBottom: 4
+  },
+  alertSub: { fontSize: 10, opacity: 0.8, marginBottom: 10 },
+  alertBtn: {
+    background: '#f7f1e3', color: '#a8372f',
+    padding: '8px 12px', borderRadius: 8,
+    fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', textAlign: 'center'
+  },
+  rosterRow: {
+    display: 'flex', alignItems: 'center',
+    padding: '10px 0', borderBottom: '1px solid rgba(15,30,46,0.08)',
+    gap: 10, fontSize: 12
+  },
+  check: {
+    width: 18, height: 18,
+    border: '1.5px solid rgba(15,30,46,0.14)',
+    borderRadius: 4, flexShrink: 0
+  },
+  checkOn: {
+    background: '#4a6b3e', borderColor: '#4a6b3e',
+    color: 'white', display: 'flex', alignItems: 'center',
+    justifyContent: 'center', fontSize: 11, fontWeight: 'bold'
+  },
+  adminActions: {
+    display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)',
+    gap: 8, marginTop: 14
+  },
+  adminBtn: {
+    background: '#efe6cf', border: '1px solid rgba(15,30,46,0.08)',
+    borderRadius: 8, padding: 10, fontSize: 10, fontWeight: 600,
+    color: '#0f1e2e', textAlign: 'center', letterSpacing: '0.02em'
+  },
+
+  /* Profile */
+  profileHero: {
+    textAlign: 'center', padding: '16px 0 20px',
+    borderBottom: '1px solid rgba(15,30,46,0.08)', marginBottom: 16
+  },
+  profileAvatar: {
+    width: 70, height: 70, borderRadius: '50%',
+    background: 'linear-gradient(135deg, #efe6cf, #d9c194)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontFamily: '"Cormorant Garamond", Georgia, serif',
+    fontSize: 26, fontWeight: 600, color: '#0f1e2e',
+    margin: '0 auto 10px', border: '2px solid #faf6ec',
+    boxShadow: '0 0 0 1px rgba(15,30,46,0.14)'
+  },
+  profileName: {
+    fontFamily: '"Cormorant Garamond", Georgia, serif',
+    fontSize: 22, fontWeight: 500, color: '#0f1e2e'
+  },
+  profileRole: {
+    fontFamily: '"JetBrains Mono", monospace',
+    fontSize: 9, letterSpacing: '0.25em',
+    textTransform: 'uppercase', color: '#8f6d3c', marginTop: 2
+  },
+  statsMini: {
+    display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: 8, marginBottom: 16
+  },
+  statMini: {
+    background: '#efe6cf', borderRadius: 8,
+    padding: '10px 4px', textAlign: 'center'
+  },
+  statMiniN: {
+    fontFamily: '"Cormorant Garamond", Georgia, serif',
+    fontSize: 20, fontWeight: 600, color: '#0f1e2e', lineHeight: 1
+  },
+  statMiniL: {
+    fontSize: 9, color: '#8a8578', marginTop: 3,
+    letterSpacing: '0.08em', textTransform: 'uppercase'
+  },
+  settingRow: {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    padding: '11px 0', borderBottom: '1px solid rgba(15,30,46,0.08)',
+    fontSize: 12, color: '#0f1e2e'
+  },
+
+  /* Economy calculator */
+  ecoWrap: {
+    display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 30
+  },
+  ecoLeft: { display: 'flex', flexDirection: 'column', gap: 20 },
+  ecoRight: { display: 'flex', flexDirection: 'column', gap: 18 },
+
+  ecoSection: {
+    background: 'rgba(239, 230, 207, 0.5)',
+    border: '1px solid rgba(184, 147, 90, 0.2)',
+    borderRadius: 12, padding: 18
+  },
+  ecoSectionTitle: {
+    fontFamily: '"Cormorant Garamond", Georgia, serif',
+    fontSize: 17, fontWeight: 600, color: '#0f1e2e',
+    marginBottom: 14, paddingBottom: 8,
+    borderBottom: '1px solid rgba(15,30,46,0.08)'
+  },
+  sliderRow: { marginBottom: 14 },
+  sliderLabel: {
+    display: 'flex', justifyContent: 'space-between',
+    fontSize: 12, color: '#1d2e42', marginBottom: 6,
+    alignItems: 'baseline'
+  },
+  slider: {
+    width: '100%', height: 4, accentColor: '#8f6d3c', cursor: 'pointer'
+  },
+  ecoNote: {
+    fontSize: 11, fontStyle: 'italic', color: '#8f6d3c',
+    marginTop: 4, fontFamily: '"Cormorant Garamond", Georgia, serif'
+  },
+  checkRow: {
+    display: 'flex', alignItems: 'center', gap: 8,
+    fontSize: 12, color: '#1d2e42', marginTop: 10,
+    cursor: 'pointer'
+  },
+
+  ecoSummary: {
+    background: 'linear-gradient(135deg, #0f1e2e 0%, #1d2e42 100%)',
+    borderRadius: 14, padding: 20, color: '#f7f1e3'
+  },
+  ecoSummaryTitle: {
+    fontFamily: '"Cormorant Garamond", Georgia, serif',
+    fontSize: 18, fontWeight: 500, marginBottom: 14,
+    color: '#d9c194', fontStyle: 'italic'
+  },
+  ecoStats: {
+    display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12
+  },
+  ecoStat: {
+    background: 'rgba(247,241,227,0.05)',
+    border: '1px solid rgba(247,241,227,0.1)',
+    borderRadius: 8, padding: 12
+  },
+  ecoStatEmph: {
+    gridColumn: '1 / -1',
+    background: 'rgba(217,193,148,0.1)',
+    borderColor: 'rgba(217,193,148,0.2)'
+  },
+  ecoStatLabel: {
+    fontSize: 10, letterSpacing: '0.1em',
+    textTransform: 'uppercase',
+    color: 'rgba(247,241,227,0.6)', marginBottom: 6
+  },
+  ecoStatValue: {
+    fontFamily: '"Cormorant Garamond", Georgia, serif',
+    fontWeight: 600, lineHeight: 1
+  },
+  ecoStatHint: {
+    fontSize: 11, opacity: 0.6, marginLeft: 6,
+    fontFamily: '"Inter", sans-serif', fontWeight: 400
+  },
+
+  chartWrap: {
+    background: 'rgba(239, 230, 207, 0.5)',
+    border: '1px solid rgba(184, 147, 90, 0.2)',
+    borderRadius: 12, padding: 18
+  },
+  chartTitle: {
+    fontFamily: '"Cormorant Garamond", Georgia, serif',
+    fontSize: 15, fontWeight: 600, color: '#0f1e2e', marginBottom: 10
+  },
+  chartFoot: {
+    display: 'flex', justifyContent: 'space-between',
+    fontSize: 10, color: '#8a8578', marginTop: 6,
+    fontFamily: '"JetBrains Mono", monospace', letterSpacing: '0.05em'
+  },
+
+  ecoAdvice: {
+    background: '#efe6cf',
+    border: '1px solid rgba(184,147,90,0.3)',
+    borderRadius: 10, padding: 14,
+    fontSize: 12, lineHeight: 1.6, color: '#1d2e42',
+    fontFamily: '"Cormorant Garamond", Georgia, serif',
+    fontStyle: 'italic'
+  },
+
+  ornament: {
+    textAlign: 'center', color: '#d9c194',
+    fontSize: 14, margin: '40px 0 20px', letterSpacing: '1em'
+  },
+  footerNote: {
+    maxWidth: 900, margin: '0 auto',
+    textAlign: 'center', fontSize: 12,
+    color: 'rgba(247,241,227,0.4)', lineHeight: 1.7,
+    fontStyle: 'italic',
+    fontFamily: '"Cormorant Garamond", Georgia, serif'
+  }
+};
+
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<MinyanMockupsV2 />);
+  </script>
+</body>
+</html>
