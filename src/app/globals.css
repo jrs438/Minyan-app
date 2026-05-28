@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    background: #faf6ec;
+    color: #0f1e2e;
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply w-full py-3.5 rounded-xl bg-ink text-cream font-semibold text-sm tracking-wide
+           active:scale-[0.98] transition-transform disabled:opacity-50;
+  }
+  .btn-secondary {
+    @apply w-full py-3.5 rounded-xl bg-parchment border border-black/10 text-ink font-semibold text-sm
+           active:scale-[0.98] transition-transform;
+  }
+  .btn-gold {
+    @apply w-full py-3 rounded-lg bg-gold text-ink font-semibold text-sm
+           active:scale-[0.98] transition-transform;
+  }
+  .card {
+    @apply bg-cream-warm border border-black/5 rounded-xl p-4;
+  }
+  .section-label {
+    @apply font-mono text-[10px] tracking-[0.25em] uppercase text-muted mb-2.5;
+  }
+}
+
+/* Respect safe area on iPhones */
+.pt-safe { padding-top: env(safe-area-inset-top); }
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }

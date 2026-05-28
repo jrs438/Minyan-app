@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/sync-zmanim",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/commit-reminders",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/yahrzeit-prompts",
+      "schedule": "0 13 * * *"
+    }
+  ]
+}
