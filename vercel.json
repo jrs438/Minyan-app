@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/nightly",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/yahrzeit-prompts",
+      "schedule": "0 13 * * *"
+    }
+  ]
+}
