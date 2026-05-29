@@ -19,6 +19,7 @@ export default async function CheckInPage() {
     .select('*')
     .gte('start_time', windowStart.toISOString())
     .lte('start_time', windowEnd.toISOString())
+    .order('start_time', { ascending: true })
     .limit(1);
 
   const active = activeRaw?.[0];

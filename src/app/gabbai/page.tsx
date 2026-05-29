@@ -18,7 +18,10 @@ export default async function GabbaiPage() {
 
   // Next 3 minyanim
   const { data: upcomingRaw } = await sb
-    .from('v_upcoming_minyanim').select('*').limit(3);
+    .from('v_upcoming_minyanim').select('*')
+    .gte('start_time', new Date().toISOString())
+    .order('start_time', { ascending: true })
+    .limit(3);
   const upcoming = (upcomingRaw || []) as UpcomingMinyan[];
 
   // Next minyan for roster
