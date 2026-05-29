@@ -46,34 +46,3 @@ export async function computeStreak(memberId: string): Promise<number> {
   }
   return streak;
 }
-
-// Award streak bonuses if they hit a milestone. Called after check-in.
-export async function awardStreakBonuses(memberId: string, attendanceId: string) {
-  const admin = supabaseAdmin();
-  const streak = await computeStreak(memberId);
-  const { data: cfg } = await admin.from('rewards_config').select('*').eq('id', 1).single();
-  if (!cfg) return;
-
-  // Check if we've already awarded this milestone in the last 7 days
-  const bonuses: Array<{ days: number; points: number; reason: string }> = [
-    { days: 7, points: cfg.points_per_streak_7, reason: 'streak_7' },
-    { days: 30, points: cfg.points_per_streak_30, reason: 'streak_30' }
-  ];
-
-  for (const b of bonuses) {
-    if (streak !== b.days) continue;
-    const sevenDaysAgo = new Date(Date.now() - 7 * 86400_000).toISOString();
-    const { data: already } = await admin.from('points_ledger')
-      .select('id').eq('member_id', memberId).eq('reason', b.reason)
-      .gte('created_at', sevenDaysAgo).maybeSingle();
-    if (already) continue;
-
-    await admin.from('points_ledger').insert({
-      member_id: memberId,
-      points: b.points,
-      reason: b.reason,
-      reference_id: attendanceId,
-      description: `${b.days}-day streak bonus`
-    });
-  }
-}
