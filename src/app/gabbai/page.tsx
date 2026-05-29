@@ -6,6 +6,7 @@ import { GabbaiAlertCard } from '@/components/GabbaiAlertCard';
 import { GabbaiRoster } from '@/components/GabbaiRoster';
 import Link from 'next/link';
 import type { UpcomingMinyan } from '@/lib/types';
+import { formatServiceDate } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
 
@@ -66,7 +67,7 @@ export default async function GabbaiPage() {
         {next && (
           <>
             <div className="section-label mt-5">
-              {new Date(next.start_time).toLocaleDateString('en-US', { weekday: 'long' })} Roster · {next.display_time}
+              {formatServiceDate(next.service_date, { weekday: 'long' })} Roster · {next.display_time}
             </div>
             <GabbaiRoster minyanId={next.id} roster={roster} />
           </>

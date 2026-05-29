@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import type { UpcomingMinyan } from '@/lib/types';
+import { formatServiceDate } from '@/lib/time';
 
 export function SponsoredCard({ minyan }: { minyan: UpcomingMinyan }) {
-  const d = new Date(minyan.start_time);
-  const dayLabel = d.toLocaleDateString('en-US', { weekday: 'long' });
+  const dayLabel = formatServiceDate(minyan.service_date, { weekday: 'long' });
   const dedi = minyan.dedication!;
   const typeWord = minyan.minyan_type === 'shacharit' ? 'Shacharit' : 'Mincha/Maariv';
 

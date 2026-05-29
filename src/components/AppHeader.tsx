@@ -4,7 +4,7 @@ import type { Member } from '@/lib/types';
 export function AppHeader({ member, subtitle }: { member: Member; subtitle?: string }) {
   const initials = `${member.first_name[0] || ''}${member.last_name[0] || ''}`.toUpperCase();
   const now = new Date();
-  const dateStr = now.toLocaleDateString('en-US', { weekday: 'long' });
+  const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'America/New_York' });
   return (
     <div className="flex justify-between items-center px-5 pt-5 pb-4 border-b border-black/5">
       <div>

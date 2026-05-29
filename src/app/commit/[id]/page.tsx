@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { getCurrentMember, supabaseServer } from '@/lib/supabase';
 import { CommitActions } from '@/components/CommitActions';
 import type { UpcomingMinyan } from '@/lib/types';
+import { formatServiceDate } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,8 +29,7 @@ export default async function CommitPage({ params }: { params: Promise<{ id: str
     .eq('minyan_id', id)
     .maybeSingle();
 
-  const d = new Date(m.start_time);
-  const dayLabel = d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+  const dayLabel = formatServiceDate(m.service_date, { weekday: 'long', month: 'short', day: 'numeric' });
   const typeWord = m.minyan_type === 'shacharit' ? 'Shacharit' : 'Mincha/Maariv';
   const below = m.yes_count < m.threshold;
 

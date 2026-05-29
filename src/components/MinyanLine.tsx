@@ -1,13 +1,13 @@
 import Link from 'next/link';
 import type { UpcomingMinyan } from '@/lib/types';
+import { formatServiceDate, nyTodayDateStr, addDaysStr } from '@/lib/time';
 
 function formatWhen(m: UpcomingMinyan): string {
-  const d = new Date(m.start_time);
-  const today = new Date();
-  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
-  const isToday = d.toDateString() === today.toDateString();
-  const isTomorrow = d.toDateString() === tomorrow.toDateString();
-  const day = isToday ? 'Today' : isTomorrow ? 'Tomorrow' : d.toLocaleDateString('en-US', { weekday: 'short' });
+  const today = nyTodayDateStr();
+  const day =
+    m.service_date === today ? 'Today'
+    : m.service_date === addDaysStr(today, 1) ? 'Tomorrow'
+    : formatServiceDate(m.service_date, { weekday: 'short' });
   return `${day} · ${m.display_time}`;
 }
 
