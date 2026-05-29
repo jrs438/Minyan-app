@@ -328,5 +328,30 @@ create policy "own yahrzeits" on yahrzeits for all
     or public.is_gabbai_or_admin());
 
 -- =========================================================================
+-- Lookup / config tables: anyone signed in can read; only a gabbai/admin
+-- (or the service role, which bypasses RLS) can change them.
+-- =========================================================================
+
+alter table minyanim enable row level security;
+create policy "minyanim read" on minyanim for select using (true);
+create policy "minyanim gabbai write" on minyanim for all
+  using (public.is_gabbai_or_admin()) with check (public.is_gabbai_or_admin());
+
+alter table minyan_types enable row level security;
+create policy "minyan_types read" on minyan_types for select using (true);
+create policy "minyan_types gabbai write" on minyan_types for all
+  using (public.is_gabbai_or_admin()) with check (public.is_gabbai_or_admin());
+
+alter table rewards_config enable row level security;
+create policy "rewards_config read" on rewards_config for select using (true);
+create policy "rewards_config gabbai write" on rewards_config for all
+  using (public.is_gabbai_or_admin()) with check (public.is_gabbai_or_admin());
+
+-- pool_state is only ever written by the service role (Stripe webhook), so no
+-- write policy is needed — RLS with just a read policy blocks anon writes.
+alter table pool_state enable row level security;
+create policy "pool_state read" on pool_state for select using (true);
+
+-- =========================================================================
 -- Done. Next: run `npm run dev` after setting up env vars.
 -- =========================================================================
