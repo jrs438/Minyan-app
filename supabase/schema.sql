@@ -80,7 +80,7 @@ create table attendance (
   checked_in_at timestamptz not null default now(),
   checked_in_by text not null default 'self' check (checked_in_by in ('self', 'gabbai')),
   gabbai_id uuid references members(id),
-  points_awarded int not null default 0,
+  points_awarded numeric not null default 0,
   was_rescue boolean not null default false,
   was_sponsored_minyan boolean not null default false,
   unique (member_id, minyan_id)
@@ -92,8 +92,8 @@ create index on attendance (minyan_id);
 create table points_ledger (
   id uuid primary key default gen_random_uuid(),
   member_id uuid not null references members(id) on delete cascade,
-  points int not null,
-  reason text not null, -- 'attendance', 'rescue_bonus', 'sponsored_bonus', 'streak_7', 'streak_30', 'redemption', 'adjustment'
+  points numeric not null,
+  reason text not null, -- 'attendance', 'early_commit', 'streak_bonus', 'gabbai_award', 'redemption', 'adjustment'
   reference_id uuid, -- attendance id, etc.
   description text,
   created_at timestamptz not null default now()
@@ -326,6 +326,31 @@ create policy "gabbai all sponsorships" on sponsorships for all
 create policy "own yahrzeits" on yahrzeits for all
   using (family_member_id in (select id from members where auth_user_id = auth.uid())
     or public.is_gabbai_or_admin());
+
+-- =========================================================================
+-- Lookup / config tables: anyone signed in can read; only a gabbai/admin
+-- (or the service role, which bypasses RLS) can change them.
+-- =========================================================================
+
+alter table minyanim enable row level security;
+create policy "minyanim read" on minyanim for select using (true);
+create policy "minyanim gabbai write" on minyanim for all
+  using (public.is_gabbai_or_admin()) with check (public.is_gabbai_or_admin());
+
+alter table minyan_types enable row level security;
+create policy "minyan_types read" on minyan_types for select using (true);
+create policy "minyan_types gabbai write" on minyan_types for all
+  using (public.is_gabbai_or_admin()) with check (public.is_gabbai_or_admin());
+
+alter table rewards_config enable row level security;
+create policy "rewards_config read" on rewards_config for select using (true);
+create policy "rewards_config gabbai write" on rewards_config for all
+  using (public.is_gabbai_or_admin()) with check (public.is_gabbai_or_admin());
+
+-- pool_state is only ever written by the service role (Stripe webhook), so no
+-- write policy is needed — RLS with just a read policy blocks anon writes.
+alter table pool_state enable row level security;
+create policy "pool_state read" on pool_state for select using (true);
 
 -- =========================================================================
 -- Done. Next: run `npm run dev` after setting up env vars.
