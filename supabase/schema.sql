@@ -394,5 +394,26 @@ create policy "store_redemptions gabbai update" on store_redemptions for update
   using (public.is_gabbai_or_admin()) with check (public.is_gabbai_or_admin());
 
 -- =========================================================================
+-- QUARTERLY RAFFLE (each positive point earned in the period = one entry)
+-- =========================================================================
+create table raffles (
+  id uuid primary key default gen_random_uuid(),
+  prize text not null,
+  prize_value_cents int, -- display only
+  period_start timestamptz not null,
+  period_end timestamptz not null,
+  drawn_at timestamptz,
+  winner_member_id uuid references members(id) on delete set null,
+  notes text,
+  created_at timestamptz not null default now()
+);
+create index on raffles (period_end desc);
+
+alter table raffles enable row level security;
+create policy "raffles read" on raffles for select using (true);
+create policy "raffles gabbai write" on raffles for all
+  using (public.is_gabbai_or_admin()) with check (public.is_gabbai_or_admin());
+
+-- =========================================================================
 -- Done. Next: run `npm run dev` after setting up env vars.
 -- =========================================================================
