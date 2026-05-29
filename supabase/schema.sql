@@ -353,5 +353,46 @@ alter table pool_state enable row level security;
 create policy "pool_state read" on pool_state for select using (true);
 
 -- =========================================================================
+-- POINTS STORE (redeem points for swag / gift cards)
+-- =========================================================================
+create table store_items (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  description text,
+  point_cost numeric not null,
+  image_url text,
+  stock int, -- null = unlimited
+  active boolean not null default true,
+  sort_order int not null default 0,
+  created_at timestamptz not null default now()
+);
+
+create table store_redemptions (
+  id uuid primary key default gen_random_uuid(),
+  member_id uuid not null references members(id) on delete cascade,
+  item_id uuid references store_items(id) on delete set null,
+  item_name text not null, -- snapshot in case the item is later edited/removed
+  points_spent numeric not null,
+  status text not null default 'pending' check (status in ('pending', 'fulfilled', 'cancelled')),
+  created_at timestamptz not null default now(),
+  fulfilled_at timestamptz
+);
+create index on store_redemptions (member_id, created_at desc);
+create index on store_redemptions (status);
+
+alter table store_items enable row level security;
+create policy "store_items read" on store_items for select using (true);
+create policy "store_items gabbai write" on store_items for all
+  using (public.is_gabbai_or_admin()) with check (public.is_gabbai_or_admin());
+
+-- Redemptions are inserted server-side (service role) after a balance check;
+-- members read their own, gabbaim read all and mark them fulfilled.
+alter table store_redemptions enable row level security;
+create policy "store_redemptions read" on store_redemptions for select
+  using (member_id in (select id from members where auth_user_id = auth.uid()) or public.is_gabbai_or_admin());
+create policy "store_redemptions gabbai update" on store_redemptions for update
+  using (public.is_gabbai_or_admin()) with check (public.is_gabbai_or_admin());
+
+-- =========================================================================
 -- Done. Next: run `npm run dev` after setting up env vars.
 -- =========================================================================
