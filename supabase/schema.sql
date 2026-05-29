@@ -250,7 +250,7 @@ select
     and a.checked_in_at >= date_trunc('month', current_date)) as attendance_count
 from members m
 where m.role in ('member', 'gabbai', 'admin') and m.active = true
-having (select count(*) from attendance a where a.member_id = m.id
+  and (select count(*) from attendance a where a.member_id = m.id
     and a.checked_in_at >= date_trunc('month', current_date)) >= 15
 order by attendance_count desc;
 
@@ -268,48 +268,64 @@ alter table rewards_claimed enable row level security;
 alter table yahrzeits enable row level security;
 alter table notifications_sent enable row level security;
 
+-- Helper: is the current user a gabbai/admin? Runs as SECURITY DEFINER so the
+-- lookup bypasses RLS on members and does NOT trigger recursive policy checks.
+create or replace function public.is_gabbai_or_admin()
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select exists (
+    select 1 from public.members
+    where auth_user_id = auth.uid()
+      and role in ('gabbai', 'admin')
+  );
+$$;
+
 -- Everyone can read their own member row; gabbaim/admins can read all active members
 create policy "members read own" on members for select
   using (auth_user_id = auth.uid() or
-    exists (select 1 from members me where me.auth_user_id = auth.uid() and me.role in ('gabbai', 'admin')));
+    public.is_gabbai_or_admin());
 
 create policy "members update own" on members for update
   using (auth_user_id = auth.uid());
 
 create policy "admins insert members" on members for insert
-  with check (exists (select 1 from members me where me.auth_user_id = auth.uid() and me.role in ('gabbai', 'admin')));
+  with check (public.is_gabbai_or_admin());
 
 -- Commitments — members manage their own, gabbaim read all
 create policy "commit own" on commitments for all
   using (member_id in (select id from members where auth_user_id = auth.uid()));
 
 create policy "gabbai read all commitments" on commitments for select
-  using (exists (select 1 from members me where me.auth_user_id = auth.uid() and me.role in ('gabbai', 'admin')));
+  using (public.is_gabbai_or_admin());
 
 -- Attendance — gabbaim write, all members read (for leaderboards)
 create policy "all read attendance" on attendance for select using (true);
 create policy "self checkin" on attendance for insert
   with check (member_id in (select id from members where auth_user_id = auth.uid()) and checked_in_by = 'self');
 create policy "gabbai checkin" on attendance for all
-  using (exists (select 1 from members me where me.auth_user_id = auth.uid() and me.role in ('gabbai', 'admin')));
+  using (public.is_gabbai_or_admin());
 
 -- Points ledger — read own or all-for-gabbai
 create policy "points read own" on points_ledger for select
   using (member_id in (select id from members where auth_user_id = auth.uid()));
 create policy "gabbai all points" on points_ledger for all
-  using (exists (select 1 from members me where me.auth_user_id = auth.uid() and me.role in ('gabbai', 'admin')));
+  using (public.is_gabbai_or_admin());
 
 -- Dedications and sponsorships — public read (they're meant to be seen)
 create policy "all read dedications" on dedications for select using (true);
 create policy "own sponsorships" on sponsorships for select
   using (sponsor_member_id in (select id from members where auth_user_id = auth.uid()));
 create policy "gabbai all sponsorships" on sponsorships for all
-  using (exists (select 1 from members me where me.auth_user_id = auth.uid() and me.role in ('gabbai', 'admin')));
+  using (public.is_gabbai_or_admin());
 
 -- Yahrzeits — own or admin
 create policy "own yahrzeits" on yahrzeits for all
   using (family_member_id in (select id from members where auth_user_id = auth.uid())
-    or exists (select 1 from members me where me.auth_user_id = auth.uid() and me.role in ('gabbai', 'admin')));
+    or public.is_gabbai_or_admin());
 
 -- =========================================================================
 -- Done. Next: run `npm run dev` after setting up env vars.
