@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import { supabaseBrowser } from '@/lib/supabase-browser';
 import type { Member } from '@/lib/types';
 
+const ROLES = ['member', 'teen', 'gabbai', 'admin'] as const;
+
 export function MemberManager({ members }: { members: Member[] }) {
   const router = useRouter();
   const [adding, setAdding] = useState(false);
@@ -13,6 +15,16 @@ export function MemberManager({ members }: { members: Member[] }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkText, setBulkText] = useState('');
+  const [importing, setImporting] = useState(false);
+  const [bulkResult, setBulkResult] = useState<string | null>(null);
+
+  function formatPhone(raw: string) {
+    const cleaned = raw.replace(/[^\d+]/g, '');
+    return cleaned.startsWith('+') ? cleaned : `+1${cleaned}`;
+  }
+
   async function addMember() {
     if (!form.first_name || !form.last_name || !form.phone) {
       setError('Name and phone required');
@@ -20,23 +32,17 @@ export function MemberManager({ members }: { members: Member[] }) {
     }
     setError(null);
     setSaving(true);
-    const phone = form.phone.replace(/[^\d+]/g, '');
-    const formatted = phone.startsWith('+') ? phone : `+1${phone}`;
-
     const sb = supabaseBrowser();
     const { error } = await sb.from('members').insert({
       first_name: form.first_name,
       last_name: form.last_name,
-      phone: formatted,
+      phone: formatPhone(form.phone),
       role: form.role,
       neighborhood: form.neighborhood || null,
       active: true
     });
     setSaving(false);
-    if (error) {
-      setError(error.message);
-      return;
-    }
+    if (error) { setError(error.message); return; }
     setAdding(false);
     setForm({ first_name: '', last_name: '', phone: '', role: 'member', neighborhood: '' });
     router.refresh();
@@ -54,13 +60,88 @@ export function MemberManager({ members }: { members: Member[] }) {
     router.refresh();
   }
 
+  async function awardPoints(m: Member) {
+    const amountStr = window.prompt(`Award points to ${m.first_name} ${m.last_name}\nHow many points?`);
+    if (!amountStr) return;
+    const amount = parseFloat(amountStr.replace(/[^\d.-]/g, ''));
+    if (!Number.isFinite(amount) || amount <= 0) {
+      alert('Enter a positive number.');
+      return;
+    }
+    const reason = window.prompt('Reason (e.g. "Led davening", "D\'var Torah")');
+    if (!reason) return;
+    const sb = supabaseBrowser();
+    const { error } = await sb.from('points_ledger').insert({
+      member_id: m.id, points: amount, reason: 'gabbai_award', description: reason
+    });
+    if (error) alert('Could not save: ' + error.message);
+    else router.refresh();
+  }
+
+  async function bulkImport() {
+    setImporting(true);
+    setBulkResult(null);
+
+    const lines = bulkText.split('\n').map(l => l.trim()).filter(Boolean);
+    const rows: any[] = [];
+    let invalid = 0;
+
+    for (const line of lines) {
+      const parts = line.split(/[\t,]/).map(s => s.trim());
+      const [first, last, rawPhone, rawRole] = parts;
+      // Skip header rows
+      if (/^first/i.test(first || '') && /^last/i.test(last || '')) continue;
+      if (!first || !last || !rawPhone) { invalid++; continue; }
+      const role = ROLES.includes((rawRole || '').toLowerCase() as any)
+        ? (rawRole || '').toLowerCase()
+        : 'member';
+      rows.push({
+        first_name: first,
+        last_name: last,
+        phone: formatPhone(rawPhone),
+        role,
+        active: true
+      });
+    }
+
+    if (rows.length === 0) {
+      setImporting(false);
+      setBulkResult(invalid > 0 ? `No valid rows (${invalid} invalid).` : 'No valid rows.');
+      return;
+    }
+
+    const sb = supabaseBrowser();
+    const { data, error } = await sb.from('members')
+      .upsert(rows, { onConflict: 'phone', ignoreDuplicates: true })
+      .select('id');
+
+    setImporting(false);
+    if (error) { setBulkResult('Error: ' + error.message); return; }
+
+    const added = data?.length || 0;
+    const skipped = rows.length - added;
+    const parts: string[] = [`Added ${added}`];
+    if (skipped > 0) parts.push(`skipped ${skipped} already-existing`);
+    if (invalid > 0) parts.push(`${invalid} invalid line${invalid === 1 ? '' : 's'}`);
+    setBulkResult(parts.join(' · ') + '.');
+    setBulkText('');
+    router.refresh();
+  }
+
   return (
     <div className="px-5 pt-4">
-      {!adding ? (
-        <button onClick={() => setAdding(true)} className="btn-primary mb-4">
-          + Add Member
-        </button>
-      ) : (
+      {!adding && !bulkOpen && (
+        <div className="flex gap-2 mb-4">
+          <button onClick={() => setAdding(true)} className="btn-primary flex-1">
+            + Add Member
+          </button>
+          <button onClick={() => setBulkOpen(true)} className="btn-secondary flex-1">
+            Bulk paste
+          </button>
+        </div>
+      )}
+
+      {adding && (
         <div className="bg-cream-warm border border-black/10 rounded-xl p-4 mb-4 space-y-2">
           <input placeholder="First name" value={form.first_name}
             onChange={e => setForm({ ...form, first_name: e.target.value })}
@@ -93,6 +174,33 @@ export function MemberManager({ members }: { members: Member[] }) {
         </div>
       )}
 
+      {bulkOpen && (
+        <div className="bg-cream-warm border border-black/10 rounded-xl p-4 mb-4 space-y-2">
+          <div className="text-[11px] text-muted">
+            One per line. Tabs or commas. Columns: <strong>First, Last, Phone, Role</strong> (role optional, defaults to <em>member</em>). Paste straight from a spreadsheet.
+          </div>
+          <textarea
+            value={bulkText}
+            onChange={e => setBulkText(e.target.value)}
+            rows={6}
+            placeholder={'Jonah\tSpier\t2015551234\tteen\nDavid\tCohen\t2015550199'}
+            className="w-full px-3 py-2 rounded-lg bg-parchment border border-black/10 text-sm font-mono"
+          />
+          {bulkResult && <div className="text-[12px] text-ink">{bulkResult}</div>}
+          <div className="flex gap-2">
+            <button onClick={bulkImport} disabled={importing || !bulkText.trim()} className="btn-primary flex-1">
+              {importing ? 'Importing…' : 'Import'}
+            </button>
+            <button
+              onClick={() => { setBulkOpen(false); setBulkText(''); setBulkResult(null); }}
+              className="btn-secondary flex-1"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="section-label">{members.length} total</div>
       {members.map(m => (
         <div key={m.id}
@@ -112,9 +220,13 @@ export function MemberManager({ members }: { members: Member[] }) {
               <option value="gabbai">gabbai</option>
               <option value="admin">admin</option>
             </select>
+            <button onClick={() => awardPoints(m)}
+              className="text-[10px] text-gold-deep font-semibold underline">
+              + pts
+            </button>
             <button onClick={() => toggleActive(m)}
               className="text-[10px] text-muted underline">
-              {m.active ? 'deactivate' : 'activate'}
+              {m.active ? 'hide' : 'show'}
             </button>
           </div>
         </div>
