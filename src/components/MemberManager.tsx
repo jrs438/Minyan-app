@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabaseBrowser } from '@/lib/supabase-browser';
 import type { Member } from '@/lib/types';
@@ -19,6 +19,19 @@ export function MemberManager({ members }: { members: Member[] }) {
   const [bulkText, setBulkText] = useState('');
   const [importing, setImporting] = useState(false);
   const [bulkResult, setBulkResult] = useState<string | null>(null);
+
+  // Origin is read after mount so the invite SMS link uses whatever host the
+  // gabbai is currently on (vercel.app today, custom domain later).
+  const [origin, setOrigin] = useState('');
+  useEffect(() => { setOrigin(window.location.origin); }, []);
+
+  function inviteHref(m: Member) {
+    const url = `${origin}/auth/login?phone=${encodeURIComponent(m.phone)}`;
+    const body = `Hi ${m.first_name} — you've been added to the Beth Tefillah Minyan app. Tap to sign in: ${url}`;
+    // sms:phone?&body=... is the cross-platform form that opens iOS Messages
+    // (and Android Messaging) with the recipient and body prefilled.
+    return `sms:${m.phone}?&body=${encodeURIComponent(body)}`;
+  }
 
   function formatPhone(raw: string) {
     const cleaned = raw.replace(/[^\d+]/g, '');
@@ -220,6 +233,12 @@ export function MemberManager({ members }: { members: Member[] }) {
               <option value="gabbai">gabbai</option>
               <option value="admin">admin</option>
             </select>
+            {origin && (
+              <a href={inviteHref(m)}
+                className="text-[10px] text-gold-deep font-semibold underline">
+                invite
+              </a>
+            )}
             <button onClick={() => awardPoints(m)}
               className="text-[10px] text-gold-deep font-semibold underline">
               + pts
