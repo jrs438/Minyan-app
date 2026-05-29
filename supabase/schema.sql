@@ -250,7 +250,7 @@ select
     and a.checked_in_at >= date_trunc('month', current_date)) as attendance_count
 from members m
 where m.role in ('member', 'gabbai', 'admin') and m.active = true
-having (select count(*) from attendance a where a.member_id = m.id
+  and (select count(*) from attendance a where a.member_id = m.id
     and a.checked_in_at >= date_trunc('month', current_date)) >= 15
 order by attendance_count desc;
 
