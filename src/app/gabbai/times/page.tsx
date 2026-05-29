@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getCurrentMember, supabaseServer } from '@/lib/supabase';
 import { TimesEditor } from '@/components/TimesEditor';
+import { RefreshScheduleButton } from '@/components/RefreshScheduleButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,8 +25,14 @@ export default async function TimesPage() {
         <Link href="/gabbai" className="text-sm text-muted">‹ Gabbai</Link>
         <h1 className="font-serif text-2xl text-ink mt-2">Edit Times</h1>
         <p className="text-[12px] text-muted italic mt-1 mb-4">
-          Times sync nightly from Hebcal. Override here for special days.
+          Times sync nightly from Hebcal. Tap below to load them now, or override a time for a special day.
         </p>
+        <RefreshScheduleButton />
+        {(!minyanim || minyanim.length === 0) && (
+          <p className="text-[13px] text-muted mb-4">
+            No upcoming services yet — tap “Refresh schedule from Hebcal” to load the next two weeks.
+          </p>
+        )}
       </div>
       <TimesEditor minyanim={minyanim || []} />
     </div>

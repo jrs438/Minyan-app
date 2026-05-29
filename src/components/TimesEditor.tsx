@@ -3,6 +3,22 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabaseBrowser } from '@/lib/supabase-browser';
 
+// Convert a wall-clock time (hh:mm on serviceDate) interpreted in
+// America/New_York into the correct UTC instant, accounting for EST vs EDT.
+function nyWallClockToUTC(serviceDate: string, hh: number, mm: number): Date {
+  const [y, mo, d] = serviceDate.split('-').map(Number);
+  const asUTC = Date.UTC(y, mo - 1, d, hh, mm, 0);
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    hourCycle: 'h23',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit'
+  }).formatToParts(new Date(asUTC));
+  const get = (t: string) => Number(parts.find(p => p.type === t)?.value);
+  const nyAsUTC = Date.UTC(get('year'), get('month') - 1, get('day'), get('hour'), get('minute'), get('second'));
+  return new Date(asUTC - (nyAsUTC - asUTC));
+}
+
 export function TimesEditor({ minyanim }: { minyanim: any[] }) {
   const router = useRouter();
   const [saving, setSaving] = useState<string | null>(null);
@@ -10,11 +26,12 @@ export function TimesEditor({ minyanim }: { minyanim: any[] }) {
   async function updateTime(id: string, newTime: string, serviceDate: string) {
     setSaving(id);
     const sb = supabaseBrowser();
-    // Parse HH:MM input with the service date, in America/New_York
     const [h, mPart] = newTime.split(':');
-    const displayTime = new Date(`${serviceDate}T${h.padStart(2, '0')}:${mPart.padStart(2, '0')}:00-05:00`)
-      .toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' });
-    const startIso = new Date(`${serviceDate}T${h.padStart(2, '0')}:${mPart.padStart(2, '0')}:00-05:00`).toISOString();
+    const start = nyWallClockToUTC(serviceDate, Number(h), Number(mPart));
+    const startIso = start.toISOString();
+    const displayTime = start.toLocaleTimeString('en-US', {
+      hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York'
+    });
 
     await sb.from('minyanim').update({ start_time: startIso, display_time: displayTime }).eq('id', id);
     setSaving(null);
