@@ -22,7 +22,10 @@ export default async function HomePage() {
   const sb = await supabaseServer();
 
   const { data: upcomingRaw } = await sb
-    .from('v_upcoming_minyanim').select('*').limit(5);
+    .from('v_upcoming_minyanim').select('*')
+    .gte('start_time', new Date().toISOString())
+    .order('start_time', { ascending: true })
+    .limit(10);
   const upcoming = (upcomingRaw || []) as UpcomingMinyan[];
 
   const { data: myCommits } = await sb

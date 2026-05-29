@@ -18,7 +18,7 @@ export function MemberHome({
 }) {
   const sponsored = upcoming.find(m => m.has_dedication);
   const next = upcoming[0];
-  const rest = upcoming.filter(m => m.id !== (sponsored?.id || '') && m.id !== (next?.id || '')).slice(0, 3);
+  const rest = upcoming.filter(m => m.id !== (sponsored?.id || '') && m.id !== (next?.id || '')).slice(0, 6);
 
   return (
     <div>
