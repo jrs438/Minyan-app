@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { Role } from '@/lib/types';
 
-type Tab = 'home' | 'leaderboard' | 'rides' | 'checkin' | 'gabbai' | 'profile';
+type Tab = 'home' | 'leaderboard' | 'rides' | 'checkin' | 'gabbai' | 'profile' | 'store';
 
 export function BottomTabBar({ active, role }: { active: Tab; role: Role }) {
   const isGabbai = role === 'gabbai' || role === 'admin';

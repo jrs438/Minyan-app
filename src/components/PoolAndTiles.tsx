@@ -25,7 +25,7 @@ export function QuickTiles({ showRewards = false }: { showRewards?: boolean }) {
   const tiles = [
     { icon: '🏆', label: 'Leaderboard', href: '/leaderboard' },
     showRewards
-      ? { icon: '🎁', label: 'Rewards', href: '/profile' }
+      ? { icon: '🎁', label: 'Store', href: '/store' }
       : { icon: '🚗', label: 'Rides', href: '/rides' },
     { icon: '✓', label: 'Check-In', href: '/checkin' }
   ];
