@@ -22,24 +22,20 @@ function VerifyForm() {
       setLoading(false);
       return;
     }
-    // Check that this phone belongs to an active member
-    const { data: { user } } = await sb.auth.getUser();
-    if (user) {
-      const { data: member } = await sb.from('members').select('id, active')
-        .eq('auth_user_id', user.id).single();
-      if (!member) {
-        // First login: try to match by phone
-        const { data: byPhone } = await sb.from('members').select('id, active')
-          .eq('phone', phone).maybeSingle();
-        if (byPhone) {
-          await sb.from('members').update({ auth_user_id: user.id }).eq('id', byPhone.id);
-        } else {
-          await sb.auth.signOut();
-          setError('This phone isn\'t registered. Text the gabbai to be added.');
-          setLoading(false);
-          return;
-        }
-      }
+    // Link this phone to its member row (server-side, bypassing RLS).
+    const res = await fetch('/api/auth/link', { method: 'POST' });
+    const result = await res.json().catch(() => ({ ok: false }));
+    if (!result.ok) {
+      await sb.auth.signOut();
+      setError(
+        result.reason === 'inactive'
+          ? 'Your membership is inactive. Text the gabbai to be reactivated.'
+          : result.reason === 'not_registered'
+          ? "This phone isn't registered. Text the gabbai to be added."
+          : 'Could not sign you in. Please try again.'
+      );
+      setLoading(false);
+      return;
     }
     router.push('/home');
     router.refresh();
