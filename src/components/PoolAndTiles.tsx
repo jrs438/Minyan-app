@@ -22,13 +22,17 @@ export function PoolCard({ pool }: { pool: PoolState | null }) {
 }
 
 export function QuickTiles({ showRewards = false }: { showRewards?: boolean }) {
-  const tiles = [
-    { icon: '🏆', label: 'Leaderboard', href: '/leaderboard' },
-    showRewards
-      ? { icon: '🎁', label: 'Store', href: '/store' }
-      : { icon: '🚗', label: 'Rides', href: '/rides' },
-    { icon: '✓', label: 'Check-In', href: '/checkin' }
-  ];
+  const tiles = showRewards
+    ? [
+        { icon: '🏆', label: 'Leaderboard', href: '/leaderboard' },
+        { icon: '🎁', label: 'Store', href: '/store' },
+        { icon: '🎟', label: 'Raffle', href: '/raffle' }
+      ]
+    : [
+        { icon: '🏆', label: 'Leaderboard', href: '/leaderboard' },
+        { icon: '🚗', label: 'Rides', href: '/rides' },
+        { icon: '✓', label: 'Check-In', href: '/checkin' }
+      ];
   return (
     <div className="grid grid-cols-3 gap-2">
       {tiles.map(t => (
