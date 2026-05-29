@@ -1,10 +1,11 @@
 'use client';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { supabaseBrowser } from '@/lib/supabase-browser';
 
-export default function LoginPage() {
-  const [phone, setPhone] = useState('');
+function LoginForm() {
+  const params = useSearchParams();
+  const [phone, setPhone] = useState(params.get('phone') || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -70,5 +71,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   );
 }
