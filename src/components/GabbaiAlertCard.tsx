@@ -1,14 +1,14 @@
 'use client';
 import { useState } from 'react';
 import type { UpcomingMinyan } from '@/lib/types';
+import { formatServiceDate } from '@/lib/time';
 
 export function GabbaiAlertCard({ minyan }: { minyan: UpcomingMinyan }) {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
 
   const below = minyan.yes_count < minyan.threshold;
-  const d = new Date(minyan.start_time);
-  const day = d.toLocaleDateString('en-US', { weekday: 'short' });
+  const day = formatServiceDate(minyan.service_date, { weekday: 'short' });
   const typeWord = minyan.minyan_type === 'shacharit' ? 'Shacharit' : 'Mincha/Maariv';
 
   async function sendAlert() {

@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabaseBrowser } from '@/lib/supabase-browser';
-import { nyWallClockToUTC } from '@/lib/time';
+import { nyWallClockToUTC, formatServiceDate } from '@/lib/time';
 
 export function TimesEditor({ minyanim }: { minyanim: any[] }) {
   const router = useRouter();
@@ -27,7 +27,7 @@ export function TimesEditor({ minyanim }: { minyanim: any[] }) {
     <div className="px-5">
       {minyanim.map(m => {
         const d = new Date(m.start_time);
-        const dayStr = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        const dayStr = formatServiceDate(m.service_date, { weekday: 'short', month: 'short', day: 'numeric' });
         const timeValue = d.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', timeZone: 'America/New_York' });
         const typeLabel = m.minyan_type === 'shacharit' ? 'Shacharit' : 'Mincha/Maariv';
         return (

@@ -1,6 +1,6 @@
 export function ShabbatScreen({ reason, endsAt }: { reason?: string; endsAt?: Date }) {
   const endsStr = endsAt
-    ? endsAt.toLocaleString('en-US', { weekday: 'long', hour: 'numeric', minute: '2-digit' })
+    ? endsAt.toLocaleString('en-US', { weekday: 'long', hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' })
     : null;
 
   return (

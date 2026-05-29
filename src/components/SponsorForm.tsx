@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { formatServiceDate } from '@/lib/time';
 
 const TIERS = [
   { cents: 1800, label: '$18', name: 'Chai' },
@@ -194,8 +195,7 @@ export function SponsorForm({
             >
               <option value="">No specific minyan — general dedication</option>
               {upcomingMinyanim.map(m => {
-                const d = new Date(m.start_time);
-                const dayStr = d.toLocaleDateString('en-US', {
+                const dayStr = formatServiceDate(m.service_date, {
                   weekday: 'short', month: 'short', day: 'numeric'
                 });
                 const type = m.minyan_type === 'shacharit' ? 'Shacharit' : 'Mincha/Maariv';
