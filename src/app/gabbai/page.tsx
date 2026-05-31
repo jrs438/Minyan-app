@@ -27,34 +27,52 @@ export default async function GabbaiPage() {
     .limit(3);
   const upcoming = (upcomingRaw || []) as UpcomingMinyan[];
 
-  // Next minyan for roster
+  // Next minyan for roster — show ALL active members so the gabbai can RSVP /
+  // assign rides on behalf of anyone who hasn't responded yet.
   const next = upcoming[0];
   let roster: any[] = [];
+  let drivers: { id: string; name: string }[] = [];
   if (next) {
-    const { data: commits } = await sb
-      .from('commitments')
-      .select('status, needs_ride, members!inner(id, first_name, last_name, role, is_teen, neighborhood)')
+    const { data: members } = await sb.from('members')
+      .select('id, first_name, last_name, role, is_teen, offers_ride_default, ride_capacity')
+      .eq('active', true);
+    const { data: commits } = await sb.from('commitments')
+      .select('member_id, status, needs_ride, assigned_driver_id')
       .eq('minyan_id', next.id);
-    const { data: attendance } = await sb
-      .from('attendance')
+    const { data: attendance } = await sb.from('attendance')
       .select('member_id')
       .eq('minyan_id', next.id);
+
+    const commitMap = new Map((commits || []).map((c: any) => [c.member_id, c]));
     const attSet = new Set((attendance || []).map(a => a.member_id));
 
-    roster = (commits || []).map((c: any) => ({
-      memberId: c.members.id,
-      name: `${c.members.first_name} ${c.members.last_name}`,
-      initials: `${c.members.first_name[0]}${c.members.last_name[0]}`,
-      role: c.members.role,
-      isTeen: c.members.is_teen,
-      status: c.status,
-      needsRide: c.needs_ride,
-      checkedIn: attSet.has(c.members.id)
-    })).sort((a, b) => {
-      // yes first, then maybe, then no; checked-in at top of each
-      const order = { yes: 0, maybe: 1, no: 2 } as any;
-      return (order[a.status] - order[b.status]) || (a.checkedIn ? -1 : 1);
+    roster = (members || []).map((m: any) => {
+      const c: any = commitMap.get(m.id);
+      return {
+        memberId: m.id,
+        name: `${m.first_name} ${m.last_name}`,
+        initials: `${m.first_name[0]}${m.last_name[0]}`,
+        role: m.role,
+        status: c?.status || null,
+        needsRide: c?.needs_ride || false,
+        assignedDriverId: c?.assigned_driver_id || null,
+        checkedIn: attSet.has(m.id)
+      };
+    }).sort((a: any, b: any) => {
+      const score = (r: any) => {
+        if (r.checkedIn) return 0;
+        if (r.status === 'yes') return 1;
+        if (r.status === 'maybe') return 2;
+        if (!r.status) return 3;
+        return 4;
+      };
+      const diff = score(a) - score(b);
+      return diff !== 0 ? diff : a.name.localeCompare(b.name);
     });
+
+    drivers = (members || [])
+      .filter((m: any) => m.offers_ride_default || (m.ride_capacity && m.ride_capacity > 0))
+      .map((m: any) => ({ id: m.id, name: `${m.first_name} ${m.last_name}` }));
   }
 
   return (
@@ -71,7 +89,7 @@ export default async function GabbaiPage() {
             <div className="section-label mt-5">
               {formatServiceDate(next.service_date, { weekday: 'long' })} Roster · {next.display_time}
             </div>
-            <GabbaiRoster minyanId={next.id} roster={roster} />
+            <GabbaiRoster minyanId={next.id} roster={roster} drivers={drivers} />
           </>
         )}
 

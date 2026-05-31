@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { supabaseBrowser } from '@/lib/supabase-browser';
 import type { Member } from '@/lib/types';
 
@@ -70,6 +71,12 @@ export function MemberManager({ members }: { members: Member[] }) {
   async function changeRole(m: Member, role: string) {
     const sb = supabaseBrowser();
     await sb.from('members').update({ role }).eq('id', m.id);
+    router.refresh();
+  }
+
+  async function toggleDriver(m: Member) {
+    const sb = supabaseBrowser();
+    await sb.from('members').update({ offers_ride_default: !m.offers_ride_default }).eq('id', m.id);
     router.refresh();
   }
 
@@ -241,9 +248,18 @@ export function MemberManager({ members }: { members: Member[] }) {
                 invite
               </a>
             )}
+            <Link href={`/commit-multi?member=${m.id}`}
+              className="text-[10px] text-gold-deep font-semibold underline">
+              rsvp
+            </Link>
             <button onClick={() => awardPoints(m)}
               className="text-[10px] text-gold-deep font-semibold underline">
               + pts
+            </button>
+            <button onClick={() => toggleDriver(m)}
+              className={`text-[10px] underline ${m.offers_ride_default ? 'text-gold-deep font-semibold' : 'text-muted'}`}
+              title="Toggle whether this member can give rides">
+              🚗{m.offers_ride_default ? '✓' : ''}
             </button>
             <button onClick={() => toggleActive(m)}
               className="text-[10px] text-muted underline">

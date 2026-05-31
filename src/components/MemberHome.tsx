@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { AppHeader } from './AppHeader';
 import { MinyanLine } from './MinyanLine';
 import { SponsoredCard } from './SponsoredCard';
@@ -45,6 +46,13 @@ export function MemberHome({
               />
             ))}
           </div>
+        )}
+
+        {upcoming.length > 1 && (
+          <Link href="/commit-multi"
+            className="block text-center bg-cream-warm border border-black/10 rounded-lg py-2.5 text-[12px] font-semibold text-ink mb-3.5 active:bg-cream">
+            ✓ RSVP for the week
+          </Link>
         )}
 
         <PoolCard pool={pool} />
