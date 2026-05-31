@@ -4,10 +4,10 @@ import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister';
 import { InstallHint } from '@/components/InstallHint';
 
 export const metadata: Metadata = {
-  title: 'Beth Tefillah Minyan',
+  title: 'CBT Minyan App',
   description: 'Companion for the daily minyan at Congregation Beth Tefillah',
   manifest: '/manifest.json',
-  appleWebApp: { capable: true, statusBarStyle: 'default', title: 'Minyan' }
+  appleWebApp: { capable: true, statusBarStyle: 'default', title: 'CBT Minyan' }
 };
 
 export const viewport: Viewport = {
