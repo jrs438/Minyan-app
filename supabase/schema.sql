@@ -371,6 +371,40 @@ alter table pool_state enable row level security;
 create policy "pool_state read" on pool_state for select using (true);
 
 -- =========================================================================
+-- FOOD ORDERS (e.g. Thursday-night slurpees for teens/preteens)
+-- =========================================================================
+create table food_orders (
+  id uuid primary key default gen_random_uuid(),
+  minyan_id uuid not null references minyanim(id) on delete cascade unique,
+  prompt text not null default 'Slurpee?',
+  options text[] not null default array['Coke','Red','Blue'],
+  created_at timestamptz not null default now()
+);
+
+create table food_order_responses (
+  id uuid primary key default gen_random_uuid(),
+  food_order_id uuid not null references food_orders(id) on delete cascade,
+  member_id uuid not null references members(id) on delete cascade,
+  choice text not null,
+  responded_at timestamptz not null default now(),
+  unique (food_order_id, member_id)
+);
+create index on food_order_responses (food_order_id);
+
+alter table food_orders enable row level security;
+create policy "food_orders read" on food_orders for select using (true);
+create policy "food_orders gabbai write" on food_orders for all
+  using (public.is_gabbai_or_admin()) with check (public.is_gabbai_or_admin());
+
+alter table food_order_responses enable row level security;
+create policy "food responses read" on food_order_responses for select using (true);
+create policy "food responses own" on food_order_responses for all
+  using (member_id in (select id from members where auth_user_id = auth.uid()))
+  with check (member_id in (select id from members where auth_user_id = auth.uid()));
+create policy "food responses gabbai" on food_order_responses for all
+  using (public.is_gabbai_or_admin()) with check (public.is_gabbai_or_admin());
+
+-- =========================================================================
 -- APP SETTINGS (single row of config the gabbai can edit from the app)
 -- =========================================================================
 create table app_settings (
