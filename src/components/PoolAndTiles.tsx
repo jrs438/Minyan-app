@@ -10,7 +10,7 @@ export function PoolCard({ pool }: { pool: PoolState | null }) {
     >
       <div>
         <div className="font-mono text-[9px] tracking-[0.2em] uppercase text-gold-deep">
-          Incentive Pool
+          Sponsorship Pool
         </div>
         <div className="font-serif text-[22px] font-semibold text-ink leading-tight mt-0.5">
           ${dollars}
