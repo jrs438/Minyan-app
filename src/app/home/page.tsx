@@ -42,17 +42,30 @@ export default async function HomePage() {
   let teenStats = null;
   let topTeens: LeaderboardRow[] = [];
   if (member.role === 'teen') {
-    const { data: lbRaw } = await sb.from('v_teen_leaderboard_month').select('*').limit(20);
+    const { data: lbRaw } = await sb.from('v_teen_leaderboard_month').select('*')
+      .order('points_this_month', { ascending: false, nullsFirst: false })
+      .limit(20);
     topTeens = (lbRaw || []) as LeaderboardRow[];
     const myIdx = topTeens.findIndex(t => t.id === member.id);
     const streak = await computeStreak(member.id);
+
+    // Climb-card slice: two above + you when you have peers above; top 3 when
+    // you're #1 or unranked. Attach each row's absolute rank so the renderer
+    // doesn't have to derive it (which had a bug for #1-ranked teens).
+    const sliceStart = myIdx > 0 ? Math.max(0, myIdx - 2) : 0;
+    const sliceEnd = myIdx > 0 ? myIdx + 1 : Math.min(topTeens.length, 3);
+    const climb: Array<LeaderboardRow & { rank: number }> = [];
+    for (let j = sliceStart; j < sliceEnd; j++) {
+      climb.push({ ...topTeens[j], rank: j + 1 });
+    }
+
     teenStats = {
       points: topTeens[myIdx]?.points_this_month || 0,
       minyanim: topTeens[myIdx]?.minyanim_this_month || 0,
       rank: myIdx >= 0 ? myIdx + 1 : topTeens.length + 1,
       totalTeens: topTeens.length,
       streak,
-      climb: myIdx > 0 ? topTeens.slice(Math.max(0, myIdx - 2), myIdx + 1) : topTeens.slice(0, 3)
+      climb
     };
   }
 
