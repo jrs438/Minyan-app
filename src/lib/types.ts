@@ -1,4 +1,4 @@
-export type Role = 'member' | 'teen' | 'gabbai' | 'admin';
+export type Role = 'member' | 'teen' | 'preteen' | 'gabbai' | 'admin';
 
 export interface Member {
   id: string;

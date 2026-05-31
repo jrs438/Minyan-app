@@ -19,12 +19,15 @@ export default async function IncentivesPage() {
         </p>
       </div>
       <div className="px-5 space-y-4">
-        <Section title="Earning — teens">
+        <Section title="Earning — teens & preteens">
           <Row label="Attendance" value="1 pt" />
           <Row label="Sponsored / yahrzeit minyan" value="3 pts" />
           <Row label="Committed yes 12+ hrs ahead and showed" value="+0.5 pt" />
           <Row label="Bonus once streak passes 3 days" value="+1 pt / attendance" />
           <Row label="Gabbai manual award" value="any amount" />
+          <p className="text-[11px] text-muted mt-2 italic">
+            Preteens earn points like teens but don't count toward the minyan-of-10 threshold.
+          </p>
         </Section>
 
         <Section title="Adults">

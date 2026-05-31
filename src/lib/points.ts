@@ -4,17 +4,17 @@ export interface PointAward {
   description: string;
 }
 
-// Teen attendance scoring. Adults earn nothing (recognition only).
+// Teens and preteens earn attendance points; everyone else gets recognition only.
 // Base 1 pt (3 for a sponsored/yahrzeit minyan), +0.5 for committing "yes" 12h+
 // ahead and attending, +1 per attendance once the streak passes 3 days.
 export function attendanceAwards(opts: {
-  isTeen: boolean;
+  earnsPoints: boolean;
   hasDedication: boolean;
   committedEarly: boolean;
   streakAfter: number;
   label: string;
 }): PointAward[] {
-  if (!opts.isTeen) return [];
+  if (!opts.earnsPoints) return [];
 
   const awards: PointAward[] = [{
     points: opts.hasDedication ? 3 : 1,

@@ -11,7 +11,7 @@ create table members (
   first_name text not null,
   last_name text not null,
   email text,
-  role text not null default 'member' check (role in ('member', 'teen', 'gabbai', 'admin')),
+  role text not null default 'member' check (role in ('member', 'teen', 'preteen', 'gabbai', 'admin')),
   is_teen boolean generated always as (role = 'teen') stored,
   neighborhood text,
   date_of_birth date,
@@ -208,11 +208,17 @@ create index on notifications_sent (category, reference_id);
 -- =========================================================================
 
 -- Upcoming minyanim with commit counts (drives the home screen)
+-- Preteens earn points but DON'T count toward the minyan-of-10 threshold, so
+-- they're excluded from yes_count / maybe_count.
 create or replace view v_upcoming_minyanim as
 select
   m.*,
-  (select count(*) from commitments c where c.minyan_id = m.id and c.status = 'yes') as yes_count,
-  (select count(*) from commitments c where c.minyan_id = m.id and c.status = 'maybe') as maybe_count,
+  (select count(*) from commitments c
+     join members mb on mb.id = c.member_id
+     where c.minyan_id = m.id and c.status = 'yes' and mb.role <> 'preteen') as yes_count,
+  (select count(*) from commitments c
+     join members mb on mb.id = c.member_id
+     where c.minyan_id = m.id and c.status = 'maybe' and mb.role <> 'preteen') as maybe_count,
   (select count(*) from commitments c where c.minyan_id = m.id and c.status = 'no') as no_count,
   (select count(*) from commitments c where c.minyan_id = m.id and c.needs_ride = true) as needs_ride_count,
   exists (select 1 from dedications d where d.minyan_id = m.id) as has_dedication,
@@ -239,7 +245,7 @@ select
 from members m
 left join points_ledger pl on pl.member_id = m.id
   and pl.created_at >= date_trunc('month', current_date)
-where m.role = 'teen' and m.active = true
+where m.role in ('teen', 'preteen') and m.active = true
 group by m.id
 order by points_this_month desc nulls last;
 
@@ -357,6 +363,23 @@ create policy "rewards_config gabbai write" on rewards_config for all
 -- write policy is needed — RLS with just a read policy blocks anon writes.
 alter table pool_state enable row level security;
 create policy "pool_state read" on pool_state for select using (true);
+
+-- =========================================================================
+-- APP SETTINGS (single row of config the gabbai can edit from the app)
+-- =========================================================================
+create table app_settings (
+  id int primary key default 1,
+  whatsapp_cbt_url text,
+  whatsapp_teen_url text,
+  updated_at timestamptz not null default now(),
+  check (id = 1)
+);
+insert into app_settings (id) values (1);
+
+alter table app_settings enable row level security;
+create policy "app_settings read" on app_settings for select using (true);
+create policy "app_settings gabbai write" on app_settings for all
+  using (public.is_gabbai_or_admin()) with check (public.is_gabbai_or_admin());
 
 -- =========================================================================
 -- POINTS STORE (redeem points for swag / gift cards)
