@@ -126,6 +126,7 @@ create table sponsorships (
   contribution_type text not null check (contribution_type in ('dedication', 'pool', 'yahrzeit')),
   dedication_id uuid references dedications(id) on delete set null,
   paid_at timestamptz,
+  notes text, -- free-form note (e.g. "Check from S. Cohen" for a manual gabbai deposit)
   created_at timestamptz not null default now()
 );
 create index on sponsorships (status, paid_at);
@@ -291,6 +292,11 @@ create policy "members read own" on members for select
 
 create policy "members update own" on members for update
   using (auth_user_id = auth.uid());
+
+-- Gabbaim/admins can update any member row (change role, deactivate, etc.).
+create policy "members gabbai update" on members for update
+  using (public.is_gabbai_or_admin())
+  with check (public.is_gabbai_or_admin());
 
 create policy "admins insert members" on members for insert
   with check (public.is_gabbai_or_admin());
