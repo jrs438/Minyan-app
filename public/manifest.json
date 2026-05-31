@@ -1,6 +1,6 @@
 {
-  "name": "Beth Tefillah Minyan",
-  "short_name": "Minyan",
+  "name": "CBT Minyan App",
+  "short_name": "CBT Minyan",
   "description": "Companion for the daily minyan at Congregation Beth Tefillah",
   "start_url": "/",
   "display": "standalone",
