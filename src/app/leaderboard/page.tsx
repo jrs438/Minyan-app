@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { getCurrentMember, supabaseServer } from '@/lib/supabase';
 import { BottomTabBar } from '@/components/BottomTabBar';
 import { AppHeader } from '@/components/AppHeader';
+import { formatServiceDate } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,35 +11,49 @@ export default async function LeaderboardPage() {
   if (!member) redirect('/auth/login');
 
   const sb = await supabaseServer();
+  const nowIso = new Date().toISOString();
 
-  const { data: teens } = await sb.from('v_teen_leaderboard_month').select('*').limit(20);
-  const { data: recognition } = await sb.from('v_adult_recognition_month').select('*').limit(10);
-  const { data: cfg } = await sb.from('rewards_config').select('*').eq('id', 1).single();
+  const { data: teens } = await sb.from('v_teen_leaderboard_month').select('*')
+    .order('points_this_month', { ascending: false, nullsFirst: false })
+    .limit(20);
+  const { data: recognition } = await sb.from('v_adult_recognition_month').select('*')
+    .order('attendance_count', { ascending: false })
+    .limit(20);
 
-  const prize1 = cfg ? (cfg.monthly_prize_1_cents / 100).toFixed(0) : '200';
-  const prize2 = cfg ? (cfg.monthly_prize_2_cents / 100).toFixed(0) : '75';
-  const prize3 = cfg ? (cfg.monthly_prize_3_cents / 100).toFixed(0) : '50';
-  const quarterlyPrize = cfg ? (cfg.quarterly_prize_cents / 100).toFixed(0) : '300';
+  const { data: openRaffle } = await sb.from('raffles').select('*')
+    .lte('period_start', nowIso)
+    .gte('period_end', nowIso)
+    .is('drawn_at', null)
+    .order('period_end', { ascending: true })
+    .limit(1)
+    .maybeSingle();
 
-  const monthLabel = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const monthLabel = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'America/New_York' });
 
   return (
     <div className="min-h-screen bg-parchment pb-20 pt-safe">
       <AppHeader member={member} subtitle={monthLabel} />
 
       <div className="px-5 pt-4">
-        {/* Prize banner */}
-        <div
-          className="rounded-lg p-3 mb-4 text-[11px] leading-snug text-ink"
-          style={{ background: 'linear-gradient(135deg, #d9c194 0%, #b8935a 100%)' }}
-        >
-          <div className="font-serif text-sm font-bold mb-0.5">
-            🏆 This month · ${prize1} / ${prize2} / ${prize3}
+        {openRaffle ? (
+          <div
+            className="rounded-lg p-3 mb-4 text-[11px] leading-snug text-ink"
+            style={{ background: 'linear-gradient(135deg, #d9c194 0%, #b8935a 100%)' }}
+          >
+            <div className="font-serif text-sm font-bold mb-0.5">
+              🎟 This quarter's raffle: {openRaffle.prize}
+            </div>
+            Every point you earn = one entry. Drawn after {formatServiceDate(
+              (openRaffle.period_end as string).slice(0, 10),
+              { month: 'short', day: 'numeric' }
+            )}.
           </div>
-          Plus ${quarterlyPrize} quarterly champion prize
-        </div>
+        ) : (
+          <div className="text-[11px] text-muted italic mb-4 px-1">
+            Earn points to climb the board, redeem in the Store, or stack entries for the next raffle.
+          </div>
+        )}
 
-        {/* Teens */}
         <div className="section-label">Teen Leaderboard</div>
         {(teens && teens.length > 0) ? (
           <div className="mb-6">
@@ -78,7 +93,6 @@ export default async function LeaderboardPage() {
           <div className="text-sm text-muted italic py-4">No teen activity yet this month.</div>
         )}
 
-        {/* Adult recognition */}
         <div className="section-label mt-4">Recognition · {monthLabel}</div>
         {(recognition && recognition.length > 0) ? (
           <div>
