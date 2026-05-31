@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getCurrentMember, supabaseServer } from '@/lib/supabase';
 import { CommitActions } from '@/components/CommitActions';
+import { FoodPicker } from '@/components/FoodPicker';
 import type { UpcomingMinyan } from '@/lib/types';
 import { formatServiceDate } from '@/lib/time';
 
@@ -28,6 +29,23 @@ export default async function CommitPage({ params }: { params: Promise<{ id: str
     .eq('member_id', member.id)
     .eq('minyan_id', id)
     .maybeSingle();
+
+  const { data: foodOrder } = await sb
+    .from('food_orders')
+    .select('id, prompt, options')
+    .eq('minyan_id', id)
+    .maybeSingle();
+
+  let myFoodChoice: string | null = null;
+  if (foodOrder) {
+    const { data: myFood } = await sb
+      .from('food_order_responses')
+      .select('choice')
+      .eq('food_order_id', foodOrder.id)
+      .eq('member_id', member.id)
+      .maybeSingle();
+    myFoodChoice = myFood?.choice ?? null;
+  }
 
   const dayLabel = formatServiceDate(m.service_date, { weekday: 'long', month: 'short', day: 'numeric' });
   const typeWord = m.minyan_type === 'shacharit' ? 'Shacharit' : 'Mincha/Maariv';
@@ -101,6 +119,16 @@ export default async function CommitPage({ params }: { params: Promise<{ id: str
           hasDedication={m.has_dedication}
           sponsorUrl={m.has_dedication ? `/sponsor?minyan=${m.id}` : '/sponsor'}
         />
+
+        {foodOrder && (
+          <FoodPicker
+            foodOrderId={foodOrder.id}
+            memberId={member.id}
+            prompt={foodOrder.prompt}
+            options={foodOrder.options}
+            currentChoice={myFoodChoice}
+          />
+        )}
       </div>
     </div>
   );
