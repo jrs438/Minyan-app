@@ -66,6 +66,7 @@ create table commitments (
   minyan_id uuid not null references minyanim(id) on delete cascade,
   status text not null check (status in ('yes', 'no', 'maybe')),
   needs_ride boolean not null default false,
+  assigned_driver_id uuid references members(id) on delete set null,
   responded_at timestamptz not null default now(),
   unique (member_id, minyan_id)
 );
@@ -313,6 +314,11 @@ create policy "commit own" on commitments for all
 
 create policy "gabbai read all commitments" on commitments for select
   using (public.is_gabbai_or_admin());
+
+-- Gabbaim can RSVP on behalf of any member (and assign rides).
+create policy "gabbai write commitments" on commitments for all
+  using (public.is_gabbai_or_admin())
+  with check (public.is_gabbai_or_admin());
 
 -- Attendance — gabbaim write, all members read (for leaderboards)
 create policy "all read attendance" on attendance for select using (true);
