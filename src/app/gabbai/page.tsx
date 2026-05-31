@@ -17,6 +17,8 @@ export default async function GabbaiPage() {
 
   const sb = await supabaseServer();
 
+  const { data: settings } = await sb.from('app_settings').select('*').eq('id', 1).maybeSingle();
+
   // Next 3 minyanim
   const { data: upcomingRaw } = await sb
     .from('v_upcoming_minyanim').select('*')
@@ -73,19 +75,39 @@ export default async function GabbaiPage() {
           </>
         )}
 
+        {(settings?.whatsapp_cbt_url || settings?.whatsapp_teen_url) && (
+          <>
+            <div className="section-label mt-5">Quick Links</div>
+            <div className="grid grid-cols-2 gap-2">
+              {settings?.whatsapp_cbt_url && (
+                <a href={settings.whatsapp_cbt_url} target="_blank" rel="noopener noreferrer"
+                  className="bg-cream-warm border border-black/5 rounded-lg p-3 text-center text-[11px] font-semibold text-ink">
+                  💬 CBT WhatsApp
+                </a>
+              )}
+              {settings?.whatsapp_teen_url && (
+                <a href={settings.whatsapp_teen_url} target="_blank" rel="noopener noreferrer"
+                  className="bg-cream-warm border border-black/5 rounded-lg p-3 text-center text-[11px] font-semibold text-ink">
+                  💬 Teen WhatsApp
+                </a>
+              )}
+            </div>
+          </>
+        )}
+
         <div className="section-label mt-5">Admin Actions</div>
         <div className="grid grid-cols-2 gap-2">
           <Link href="/gabbai/members" className="bg-cream-warm border border-black/5 rounded-lg p-3 text-center text-[11px] font-semibold text-ink">
             + Add Member
+          </Link>
+          <Link href="/gabbai/award" className="bg-cream-warm border border-black/5 rounded-lg p-3 text-center text-[11px] font-semibold text-ink">
+            🏅 Award Points
           </Link>
           <Link href="/gabbai/times" className="bg-cream-warm border border-black/5 rounded-lg p-3 text-center text-[11px] font-semibold text-ink">
             Edit Times
           </Link>
           <Link href="/gabbai/wrapup" className="bg-cream-warm border border-black/5 rounded-lg p-3 text-center text-[11px] font-semibold text-ink">
             Month Wrap-Up
-          </Link>
-          <Link href="/gabbai/economy" className="bg-cream-warm border border-black/5 rounded-lg p-3 text-center text-[11px] font-semibold text-ink">
-            Incentives
           </Link>
           <Link href="/gabbai/store" className="bg-cream-warm border border-black/5 rounded-lg p-3 text-center text-[11px] font-semibold text-ink">
             Store
@@ -95,6 +117,12 @@ export default async function GabbaiPage() {
           </Link>
           <Link href="/gabbai/pool" className="bg-cream-warm border border-black/5 rounded-lg p-3 text-center text-[11px] font-semibold text-ink">
             Pool
+          </Link>
+          <Link href="/gabbai/economy" className="bg-cream-warm border border-black/5 rounded-lg p-3 text-center text-[11px] font-semibold text-ink">
+            Incentives
+          </Link>
+          <Link href="/gabbai/settings" className="bg-cream-warm border border-black/5 rounded-lg p-3 text-center text-[11px] font-semibold text-ink">
+            ⚙ Settings
           </Link>
         </div>
       </div>

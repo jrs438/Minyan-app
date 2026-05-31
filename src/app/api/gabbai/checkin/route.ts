@@ -41,9 +41,10 @@ export async function POST(req: NextRequest) {
   }).select('id').single();
   if (attErr) return NextResponse.json({ error: attErr.message }, { status: 500 });
 
-  const streakAfter = member.is_teen ? await computeStreak(member_id) : 0;
+  const earnsPoints = member.is_teen || member.role === 'preteen';
+  const streakAfter = earnsPoints ? await computeStreak(member_id) : 0;
   const awards = attendanceAwards({
-    isTeen: member.is_teen, hasDedication, committedEarly, streakAfter,
+    earnsPoints, hasDedication, committedEarly, streakAfter,
     label: `${minyan.minyan_type} · ${minyan.display_time}`
   });
   const total = awards.reduce((s, a) => s + a.points, 0);

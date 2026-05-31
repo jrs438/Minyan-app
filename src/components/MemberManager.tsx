@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { supabaseBrowser } from '@/lib/supabase-browser';
 import type { Member } from '@/lib/types';
 
-const ROLES = ['member', 'teen', 'gabbai', 'admin'] as const;
+const ROLES = ['member', 'teen', 'preteen', 'gabbai', 'admin'] as const;
 
 export function MemberManager({ members }: { members: Member[] }) {
   const router = useRouter();
@@ -172,6 +172,7 @@ export function MemberManager({ members }: { members: Member[] }) {
             className="w-full px-3 py-2 rounded-lg bg-parchment border border-black/10 text-sm">
             <option value="member">Member</option>
             <option value="teen">Teen</option>
+            <option value="preteen">Preteen</option>
             <option value="gabbai">Gabbai</option>
             <option value="admin">Admin</option>
           </select>
@@ -230,6 +231,7 @@ export function MemberManager({ members }: { members: Member[] }) {
               className="text-[11px] rounded bg-cream-warm border border-black/10 px-2 py-1">
               <option value="member">member</option>
               <option value="teen">teen</option>
+              <option value="preteen">preteen</option>
               <option value="gabbai">gabbai</option>
               <option value="admin">admin</option>
             </select>
