@@ -1,6 +1,7 @@
 import './globals.css';
 import type { Metadata, Viewport } from 'next';
 import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister';
+import { InstallHint } from '@/components/InstallHint';
 
 export const metadata: Metadata = {
   title: 'Beth Tefillah Minyan',
@@ -31,6 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <ServiceWorkerRegister />
         {children}
+        <InstallHint />
       </body>
     </html>
   );

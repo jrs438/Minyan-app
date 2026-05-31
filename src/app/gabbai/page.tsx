@@ -93,6 +93,9 @@ export default async function GabbaiPage() {
           <Link href="/gabbai/raffle" className="bg-cream-warm border border-black/5 rounded-lg p-3 text-center text-[11px] font-semibold text-ink">
             Raffle
           </Link>
+          <Link href="/gabbai/pool" className="bg-cream-warm border border-black/5 rounded-lg p-3 text-center text-[11px] font-semibold text-ink">
+            Pool
+          </Link>
         </div>
       </div>
 
