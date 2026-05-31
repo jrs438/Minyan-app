@@ -21,7 +21,7 @@ export function TeenHome({
     rank: number;
     totalTeens: number;
     streak: number;
-    climb: LeaderboardRow[];
+    climb: Array<LeaderboardRow & { rank: number }>;
   };
 }) {
   const sponsored = upcoming.find(m => m.has_dedication);
@@ -82,7 +82,6 @@ export function TeenHome({
             <div className="font-serif text-[15px] font-medium text-ink mb-2.5">Climb the board</div>
             {stats.climb.map((r, i) => {
               const isYou = r.id === member.id;
-              const rank = stats.rank - (stats.climb.length - 1 - i);
               const above = stats.climb[i + 1];
               const gap = above && !isYou ? above.points_this_month - r.points_this_month : null;
               return (
@@ -93,7 +92,7 @@ export function TeenHome({
                   }`}
                 >
                   <span>
-                    <span className="font-mono text-[11px] mr-2">#{rank}</span>
+                    <span className="font-mono text-[11px] mr-2">#{r.rank}</span>
                     {isYou ? 'You' : `${r.first_name} ${r.last_name[0]}.`}
                   </span>
                   <span>
