@@ -5,7 +5,14 @@ import { formatServiceDate } from '@/lib/time';
 
 export function GabbaiAlertCard({ minyan }: { minyan: UpcomingMinyan }) {
   const [sending, setSending] = useState(false);
-  const [result, setResult] = useState<{ recipients: number; sent: number; twilio_configured: boolean; first_error: string | null } | null>(null);
+  const [result, setResult] = useState<{
+    recipients: number;
+    queued: number;
+    delivered: number;
+    failed: number;
+    twilio_configured: boolean;
+    first_error: string | null;
+  } | null>(null);
 
   const below = minyan.yes_count < minyan.threshold;
   const day = formatServiceDate(minyan.service_date, { weekday: 'short' });
@@ -27,9 +34,10 @@ export function GabbaiAlertCard({ minyan }: { minyan: UpcomingMinyan }) {
     if (sending) return 'SENDING…';
     if (!result) return 'SEND RED ALERT →';
     if (!result.twilio_configured) return `⚠ TWILIO NOT SET (${result.recipients} would get it)`;
-    if (result.sent > 0) return `✓ SENT TO ${result.sent} OF ${result.recipients}`;
     if (result.recipients === 0) return `⚠ NO ELIGIBLE RECIPIENTS`;
-    return `⚠ 0 SENT — ${result.first_error || 'check Twilio logs'}`;
+    if (result.failed > 0) return `⚠ ${result.failed} FAILED OF ${result.recipients}`;
+    if (result.delivered > 0) return `✓ DELIVERED TO ${result.delivered} OF ${result.recipients}`;
+    return `… QUEUED ${result.queued} OF ${result.recipients} (delivery pending)`;
   }
 
   if (!below) {
@@ -59,11 +67,14 @@ export function GabbaiAlertCard({ minyan }: { minyan: UpcomingMinyan }) {
       </div>
       <button
         onClick={sendAlert}
-        disabled={sending || (result?.sent ?? 0) > 0}
+        disabled={sending || (result?.delivered ?? 0) > 0}
         className="w-full bg-cream text-alert py-2 rounded-lg text-[11px] font-bold tracking-[0.05em]"
       >
         {buttonLabel()}
       </button>
+      {result?.first_error && (
+        <div className="text-[10px] opacity-80 mt-2">{result.first_error}</div>
+      )}
     </div>
   );
 }

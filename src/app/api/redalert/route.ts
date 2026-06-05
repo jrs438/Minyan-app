@@ -49,25 +49,49 @@ export async function POST(req: NextRequest) {
   const authToken = process.env.TWILIO_AUTH_TOKEN;
   const fromNum = process.env.TWILIO_FROM_NUMBER;
   const twilioConfigured = !!(accountSid && authToken && fromNum);
-  let sent = 0;
+  let queued = 0;
+  let delivered = 0;
+  let failed = 0;
   let firstError: string | null = null;
+  const details: Array<{ phone: string; sid?: string; status?: string; errorCode?: number | null; errorMessage?: string | null }> = [];
 
   if (twilioConfigured) {
     const client = twilio(accountSid, authToken);
     for (const r of recipients) {
       try {
-        await client.messages.create({ to: r.phone, from: fromNum, body });
-        sent++;
+        let msg = await client.messages.create({ to: r.phone, from: fromNum, body });
+        // Twilio status right after create() is usually 'queued' or 'accepted'.
+        // Re-fetch once to catch immediate carrier failures (10DLC, blocked, etc.).
+        try {
+          msg = await client.messages(msg.sid).fetch();
+        } catch { /* ignore fetch errors, keep create() result */ }
+
+        queued++;
+        if (msg.status === 'delivered') delivered++;
+        if (msg.status === 'failed' || msg.status === 'undelivered') {
+          failed++;
+          if (!firstError) firstError = `Twilio ${msg.status}${msg.errorCode ? ` (${msg.errorCode})` : ''}: ${msg.errorMessage || 'no error message'}`;
+        }
+        details.push({
+          phone: r.phone,
+          sid: msg.sid,
+          status: msg.status,
+          errorCode: msg.errorCode ?? null,
+          errorMessage: msg.errorMessage ?? null
+        });
         await admin.from('notifications_sent').insert({
           member_id: r.id,
           channel: 'sms',
           category: 'red_alert',
           reference_id: minyan_id,
           body,
-          success: true
+          success: msg.status !== 'failed' && msg.status !== 'undelivered',
+          error_message: `sid=${msg.sid} status=${msg.status}${msg.errorCode ? ` err=${msg.errorCode}` : ''}`
         });
       } catch (err: any) {
+        failed++;
         if (!firstError) firstError = err?.message || 'send failed';
+        details.push({ phone: r.phone, errorMessage: err?.message });
         await admin.from('notifications_sent').insert({
           member_id: r.id,
           channel: 'sms',
@@ -84,8 +108,11 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     ok: true,
     recipients: recipients.length,
-    sent,
+    queued,
+    delivered,
+    failed,
     twilio_configured: twilioConfigured,
-    first_error: firstError
+    first_error: firstError,
+    details
   });
 }
