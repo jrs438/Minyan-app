@@ -33,9 +33,10 @@ export async function POST(req: NextRequest) {
   else if (dedication) body += ` (Dedicated: ${dedication.dedication_text})`;
   body += ' Open the app to commit.';
 
-  // Audience: members who opted in + are not already committed yes + active
+  // Audience: any active member who hasn't opted out of red-alert notifications
+  // and isn't already committed yes.
   const { data: candidates } = await admin.from('members')
-    .select('id, phone, first_name').eq('active', true).eq('notif_red_alert', true).eq('can_be_called', true);
+    .select('id, phone, first_name').eq('active', true).eq('notif_red_alert', true);
 
   // Exclude those already committed yes
   const { data: yesCommits } = await admin.from('commitments')
@@ -47,9 +48,11 @@ export async function POST(req: NextRequest) {
   const accountSid = process.env.TWILIO_ACCOUNT_SID;
   const authToken = process.env.TWILIO_AUTH_TOKEN;
   const fromNum = process.env.TWILIO_FROM_NUMBER;
+  const twilioConfigured = !!(accountSid && authToken && fromNum);
   let sent = 0;
+  let firstError: string | null = null;
 
-  if (accountSid && authToken && fromNum) {
+  if (twilioConfigured) {
     const client = twilio(accountSid, authToken);
     for (const r of recipients) {
       try {
@@ -64,6 +67,7 @@ export async function POST(req: NextRequest) {
           success: true
         });
       } catch (err: any) {
+        if (!firstError) firstError = err?.message || 'send failed';
         await admin.from('notifications_sent').insert({
           member_id: r.id,
           channel: 'sms',
@@ -77,5 +81,11 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ ok: true, recipients: recipients.length, sent });
+  return NextResponse.json({
+    ok: true,
+    recipients: recipients.length,
+    sent,
+    twilio_configured: twilioConfigured,
+    first_error: firstError
+  });
 }
