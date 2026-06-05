@@ -5,7 +5,7 @@ import { formatServiceDate } from '@/lib/time';
 
 export function GabbaiAlertCard({ minyan }: { minyan: UpcomingMinyan }) {
   const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [result, setResult] = useState<{ recipients: number; sent: number; twilio_configured: boolean; first_error: string | null } | null>(null);
 
   const below = minyan.yes_count < minyan.threshold;
   const day = formatServiceDate(minyan.service_date, { weekday: 'short' });
@@ -18,8 +18,18 @@ export function GabbaiAlertCard({ minyan }: { minyan: UpcomingMinyan }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ minyan_id: minyan.id })
     });
+    const data = await res.json().catch(() => ({}));
     setSending(false);
-    if (res.ok) setSent(true);
+    setResult(data);
+  }
+
+  function buttonLabel() {
+    if (sending) return 'SENDING…';
+    if (!result) return 'SEND RED ALERT →';
+    if (!result.twilio_configured) return `⚠ TWILIO NOT SET (${result.recipients} would get it)`;
+    if (result.sent > 0) return `✓ SENT TO ${result.sent} OF ${result.recipients}`;
+    if (result.recipients === 0) return `⚠ NO ELIGIBLE RECIPIENTS`;
+    return `⚠ 0 SENT — ${result.first_error || 'check Twilio logs'}`;
   }
 
   if (!below) {
@@ -49,10 +59,10 @@ export function GabbaiAlertCard({ minyan }: { minyan: UpcomingMinyan }) {
       </div>
       <button
         onClick={sendAlert}
-        disabled={sending || sent}
+        disabled={sending || (result?.sent ?? 0) > 0}
         className="w-full bg-cream text-alert py-2 rounded-lg text-[11px] font-bold tracking-[0.05em]"
       >
-        {sent ? '✓ ALERT SENT' : sending ? 'SENDING…' : 'SEND RED ALERT →'}
+        {buttonLabel()}
       </button>
     </div>
   );
