@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
 import { supabaseServer, supabaseAdmin } from '@/lib/supabase';
 
-// Links a freshly-authenticated phone user to their existing member row.
-// Runs server-side with the service-role key so it can read/update the
-// member row before auth_user_id is set (RLS would otherwise block it).
+// Links a freshly-authenticated user to their existing member row, by email
+// first (the new primary identifier) and phone as a fallback. Runs server-side
+// with the service role so it can read/update before auth_user_id is set
+// (RLS would otherwise block it). Always overwrites auth_user_id on a match —
+// that's what lets a member who originally signed up by phone seamlessly switch
+// to email login without losing their history.
 export async function POST() {
   const sb = await supabaseServer();
   const { data: { user } } = await sb.auth.getUser();
@@ -13,7 +16,7 @@ export async function POST() {
 
   const admin = supabaseAdmin();
 
-  // Already linked on a previous login.
+  // Already linked? Quick path.
   const { data: linked } = await admin
     .from('members')
     .select('id, active')
@@ -26,24 +29,34 @@ export async function POST() {
     return NextResponse.json({ ok: true });
   }
 
-  // First login: match by phone. Members are stored E.164 with a leading '+'
-  // (e.g. +12015550123); Supabase stores the auth phone without it (12015550123).
-  const digits = (user.phone || '').replace(/\D/g, '');
-  if (!digits) {
-    return NextResponse.json({ ok: false, reason: 'no_phone' }, { status: 400 });
+  // Match by email first (best identifier for the email-login flow).
+  let member: { id: string; active: boolean } | null = null;
+  const email = user.email?.toLowerCase().trim();
+  if (email) {
+    const { data } = await admin
+      .from('members')
+      .select('id, active')
+      .ilike('email', email)
+      .maybeSingle();
+    member = data ?? null;
   }
 
-  let { data: member } = await admin
-    .from('members')
-    .select('id, active, auth_user_id')
-    .eq('phone', `+${digits}`)
-    .maybeSingle();
-  if (!member) {
-    ({ data: member } = await admin
+  // Fall back to phone (members are stored as E.164 with +, auth strips the +).
+  if (!member && user.phone) {
+    const digits = user.phone.replace(/\D/g, '');
+    let { data } = await admin
       .from('members')
-      .select('id, active, auth_user_id')
-      .eq('phone', digits)
-      .maybeSingle());
+      .select('id, active')
+      .eq('phone', `+${digits}`)
+      .maybeSingle();
+    if (!data) {
+      ({ data } = await admin
+        .from('members')
+        .select('id, active')
+        .eq('phone', digits)
+        .maybeSingle());
+    }
+    member = data ?? null;
   }
 
   if (!member) {
@@ -52,10 +65,8 @@ export async function POST() {
   if (!member.active) {
     return NextResponse.json({ ok: false, reason: 'inactive' }, { status: 403 });
   }
-  if (member.auth_user_id && member.auth_user_id !== user.id) {
-    return NextResponse.json({ ok: false, reason: 'already_claimed' }, { status: 409 });
-  }
 
+  // Claim (or re-claim) the member row for this auth user.
   const { error: updateError } = await admin
     .from('members')
     .update({ auth_user_id: user.id })
@@ -66,3 +77,4 @@ export async function POST() {
 
   return NextResponse.json({ ok: true });
 }
+
