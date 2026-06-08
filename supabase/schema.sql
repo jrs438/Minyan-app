@@ -7,7 +7,7 @@
 create table members (
   id uuid primary key default gen_random_uuid(),
   auth_user_id uuid references auth.users(id) on delete cascade unique,
-  phone text not null unique,
+  phone text unique, -- nullable: members can sign in by email instead
   first_name text not null,
   last_name text not null,
   email text,

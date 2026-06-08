@@ -11,7 +11,7 @@ export function MemberManager({ members }: { members: Member[] }) {
   const router = useRouter();
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState({
-    first_name: '', last_name: '', phone: '', role: 'member', neighborhood: ''
+    first_name: '', last_name: '', phone: '', email: '', role: 'member', neighborhood: ''
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,8 +40,12 @@ export function MemberManager({ members }: { members: Member[] }) {
   }
 
   async function addMember() {
-    if (!form.first_name || !form.last_name || !form.phone) {
-      setError('Name and phone required');
+    if (!form.first_name || !form.last_name) {
+      setError('Name required');
+      return;
+    }
+    if (!form.phone && !form.email) {
+      setError('Phone or email required (one is enough; both is best)');
       return;
     }
     setError(null);
@@ -50,7 +54,8 @@ export function MemberManager({ members }: { members: Member[] }) {
     const { error } = await sb.from('members').insert({
       first_name: form.first_name,
       last_name: form.last_name,
-      phone: formatPhone(form.phone),
+      phone: form.phone ? formatPhone(form.phone) : null,
+      email: form.email ? form.email.toLowerCase().trim() : null,
       role: form.role,
       neighborhood: form.neighborhood || null,
       active: true
@@ -58,7 +63,7 @@ export function MemberManager({ members }: { members: Member[] }) {
     setSaving(false);
     if (error) { setError(error.message); return; }
     setAdding(false);
-    setForm({ first_name: '', last_name: '', phone: '', role: 'member', neighborhood: '' });
+    setForm({ first_name: '', last_name: '', phone: '', email: '', role: 'member', neighborhood: '' });
     router.refresh();
   }
 
@@ -108,17 +113,20 @@ export function MemberManager({ members }: { members: Member[] }) {
 
     for (const line of lines) {
       const parts = line.split(/[\t,]/).map(s => s.trim());
-      const [first, last, rawPhone, rawRole] = parts;
-      // Skip header rows
-      if (/^first/i.test(first || '') && /^last/i.test(last || '')) continue;
-      if (!first || !last || !rawPhone) { invalid++; continue; }
+      // Accept either: First, Last, Phone[, Role]  OR  First, Last, Email[, Role]
+      // Detect email vs phone in the 3rd column.
+      const [first, last, contact, rawRole] = parts;
+      if (/^first/i.test(first || '') && /^last/i.test(last || '')) continue; // header
+      if (!first || !last || !contact) { invalid++; continue; }
       const role = ROLES.includes((rawRole || '').toLowerCase() as any)
         ? (rawRole || '').toLowerCase()
         : 'member';
+      const isEmail = contact.includes('@');
       rows.push({
         first_name: first,
         last_name: last,
-        phone: formatPhone(rawPhone),
+        phone: isEmail ? null : formatPhone(contact),
+        email: isEmail ? contact.toLowerCase().trim() : null,
         role,
         active: true
       });
@@ -168,6 +176,9 @@ export function MemberManager({ members }: { members: Member[] }) {
             className="w-full px-3 py-2 rounded-lg bg-parchment border border-black/10 text-sm" />
           <input placeholder="Last name" value={form.last_name}
             onChange={e => setForm({ ...form, last_name: e.target.value })}
+            className="w-full px-3 py-2 rounded-lg bg-parchment border border-black/10 text-sm" />
+          <input placeholder="Email (preferred)" type="email" inputMode="email" value={form.email}
+            onChange={e => setForm({ ...form, email: e.target.value })}
             className="w-full px-3 py-2 rounded-lg bg-parchment border border-black/10 text-sm" />
           <input placeholder="Phone (201-555-0123)" value={form.phone}
             onChange={e => setForm({ ...form, phone: e.target.value })}

@@ -24,6 +24,11 @@ export function ProfileContent({
     rewards: member.notif_rewards
   });
   const [neighborhood, setNeighborhood] = useState(member.neighborhood || '');
+  const [pw, setPw] = useState('');
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwMsg, setPwMsg] = useState<string | null>(null);
+  const [pwErr, setPwErr] = useState<string | null>(null);
+  const [email, setEmail] = useState(member.email || '');
 
   async function savePref(field: string, value: boolean) {
     const sb = supabaseBrowser();
@@ -41,6 +46,36 @@ export function ProfileContent({
     const sb = supabaseBrowser();
     await sb.auth.signOut();
     router.push('/auth/login');
+  }
+
+  async function saveEmail() {
+    setPwErr(null); setPwMsg(null);
+    const value = email.trim().toLowerCase();
+    if (!value) return;
+    const sb = supabaseBrowser();
+    // Update the members row so the next email login matches it.
+    const { error: memErr } = await sb.from('members').update({ email: value }).eq('id', member.id);
+    if (memErr) { setPwErr(memErr.message); return; }
+    // Also update the auth identity so future logins can go via this email.
+    const { error: authErr } = await sb.auth.updateUser({ email: value });
+    if (authErr) {
+      setPwMsg('Email saved on your profile. Supabase may have sent a verify email.');
+    } else {
+      setPwMsg('Email saved.');
+    }
+    router.refresh();
+  }
+
+  async function setPassword() {
+    setPwErr(null); setPwMsg(null);
+    if (pw.length < 8) { setPwErr('Use 8+ characters.'); return; }
+    setPwSaving(true);
+    const sb = supabaseBrowser();
+    const { error } = await sb.auth.updateUser({ password: pw });
+    setPwSaving(false);
+    if (error) { setPwErr(error.message); return; }
+    setPw('');
+    setPwMsg('Password set. You can sign in with email + password from now on.');
   }
 
   const initials = `${member.first_name[0]}${member.last_name[0]}`.toUpperCase();
@@ -102,6 +137,33 @@ export function ProfileContent({
           <button onClick={saveNeighborhood} className="px-4 py-2 rounded-lg bg-ink text-cream text-[12px] font-semibold">
             Save
           </button>
+        </div>
+
+        <div className="section-label">Sign-in</div>
+        <div className="space-y-2 mb-5">
+          <div className="flex gap-2">
+            <input value={email} type="email" inputMode="email"
+              onChange={e => setEmail(e.target.value)}
+              placeholder="[email protected]"
+              className="flex-1 px-3 py-2 rounded-lg bg-cream-warm border border-black/10 text-[13px]" />
+            <button onClick={saveEmail} className="px-3 py-2 rounded-lg bg-ink text-cream text-[12px] font-semibold">
+              Save email
+            </button>
+          </div>
+          <div className="flex gap-2">
+            <input value={pw} type="password" autoComplete="new-password"
+              onChange={e => setPw(e.target.value)}
+              placeholder="Set a password (8+ chars)"
+              className="flex-1 px-3 py-2 rounded-lg bg-cream-warm border border-black/10 text-[13px]" />
+            <button onClick={setPassword} disabled={pwSaving} className="px-3 py-2 rounded-lg bg-ink text-cream text-[12px] font-semibold">
+              {pwSaving ? 'Saving…' : 'Set password'}
+            </button>
+          </div>
+          {pwMsg && <div className="text-[11px] text-ok">{pwMsg}</div>}
+          {pwErr && <div className="text-[11px] text-alert">{pwErr}</div>}
+          <p className="text-[10px] text-muted italic">
+            Email enables the free magic-link sign-in. Setting a password lets you skip the email link.
+          </p>
         </div>
 
         <div className="section-label">Notifications</div>
